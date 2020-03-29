@@ -7,8 +7,11 @@ import './plugins/element.js'
 import './assets/style/css/global.css'
 // 导入字体图标
 import './assets/style/iconfont/iconfont.css'
+
 // 导入axios
 import axios from 'axios'
+
+import './plugins/iview.js'
 axios.defaults.baseURL = 'localhost:8080'
 Vue.prototype.$http = axios
 
