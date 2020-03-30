@@ -31,7 +31,6 @@
                 <el-table-column label="角色" prop="rolename" ></el-table-column>
                 <el-table-column label="状态" prop="user_status" >
                     <template slot-scope="scope">
-                        {{scope.row.user_status}}
                         <el-switch v-model="scope.row.user_status" @change="userStatusChanged(scope.row)"></el-switch>
                     </template>
                 </el-table-column>
@@ -158,6 +157,7 @@ export default {
   },
   created () {
     // 获取用户信息
+    this.getUserInfo()
   },
   methods: {
     // 获取用户信息

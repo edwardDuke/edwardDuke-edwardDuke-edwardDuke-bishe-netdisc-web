@@ -6,7 +6,8 @@
             <img src="../assets/logo.png" style="width:40px;height:40px;" alt="">
             <span>网盘后台管理系统</span>
         </div>
-        <el-button type="info" @click="logout">退出a </el-button>
+        <el-link icon="el-icon-switch-button" :underline="false" @click="logout">退出</el-link>
+        <!-- <el-button type="info" >退出a </el-button> -->
     </el-header>
     <!-- 页面主题区域 -->
     <el-container>
@@ -15,8 +16,7 @@
             <el-menu
             :default-active="activePath"
             class="el-menu-vertical-demo"
-            @open="handleOpen"
-            @close="handleClose"
+            @select="saveMenuItem"
             background-color="#f7f7f7"
             text-color="#666666"
             active-text-color="#09aaff"
@@ -27,7 +27,7 @@
                 <span slot="title">首页</span>
             </el-menu-item>
             <!-- 一级菜单 -->
-            <el-submenu :index="item.id+''" v-for="item in menulist" :key="item.id">
+            <el-submenu :index="item.id +''" v-for="item in menulist" :key="item.id">
                 <!-- 菜单模板 -->
                 <template slot="title">
                     <!-- 菜单图标 -->
@@ -82,20 +82,20 @@ export default {
     }
   },
   methods: {
+    // 退出
     logout () {
       window.sessionStorage.clear()
       this.$router.push('/login')
     },
-    handleOpen (key, keyPath) {
-      console.log(key, keyPath, 1)
-      window.sessionStorage.setItem('activePath', key)
-    },
-    handleClose (key, keyPath) {
-      console.log(key, keyPath)
-    },
-    saveMenuItem (activePath) {
-      window.sessionStorage.setItem('activePath', activePath)
+    // 侧边栏展开点击一级时相应,解决首页不能定位问题
+    saveMenuItem (index, indexPath) {
+      console.log(index, indexPath, 1)
+      //
+      window.sessionStorage.setItem('activePath', index)
     }
+    // saveMenuItem (activePath) {
+    //   // window.sessionStorage.setItem('activePath', activePath)
+    // }
   }
 }
 </script>
