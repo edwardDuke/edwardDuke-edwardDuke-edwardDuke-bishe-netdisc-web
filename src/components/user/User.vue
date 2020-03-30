@@ -17,13 +17,15 @@
                     </el-input>
                 </el-col>
                 <el-col :span="4">
-                    <el-button @click="showAddUser">添加</el-button>
+                    <el-button type="primary" @click="showAddUser">添加</el-button>
+                    <el-button type="danger" >删除</el-button>
                 </el-col>
             </el-row>
 
             <!-- 用户列表区域 -->
-            <el-table :data="tableData" border height='350' >
-                <el-table-column type="index" label="序号" fixed></el-table-column>
+            <el-table :data="tableData" border height='350'  @selection-change="selectAll">
+                <el-table-column type="selection" width="55" ></el-table-column>
+                <el-table-column type="index" label="序号" ></el-table-column>
                 <el-table-column label="账号" prop="account"></el-table-column>
                 <el-table-column label="姓名" prop="name" ></el-table-column>
                 <el-table-column label="角色" prop="rolename" ></el-table-column>
@@ -109,20 +111,15 @@ export default {
         pagesize: 2
       },
       // 用户信息
-      tableData: [{
-        id: '0001',
-        account: '15766936118',
-        name: '王小虎',
-        rolename: '普通用户',
-        user_status: true
-      },
-      {
-        id: '0002',
-        account: '15766936118',
-        name: '王小虎2',
-        rolename: '普通用户',
-        user_status: false
-      }
+      tableData: [
+        { id: '0001', account: '160344', name: '王小虎0', rolename: '普通用户', user_status: true },
+        { id: '0002', account: '160345', name: '王小虎2', rolename: '普通用户', user_status: false },
+        { id: '0003', account: '160346', name: '王小虎3', rolename: '普通用户', user_status: true },
+        { id: '0004', account: '160347', name: '王小虎4', rolename: '普通用户', user_status: false },
+        { id: '0005', account: '160348', name: '王小虎5', rolename: '普通用户', user_status: true },
+        { id: '0006', account: '160349', name: '王小虎6', rolename: '普通用户', user_status: false },
+        { id: '0007', account: '160350', name: '王小虎7', rolename: '普通用户', user_status: true },
+        { id: '0008', account: '160351', name: '王小虎8', rolename: '普通用户', user_status: false }
       ],
       // 总共多少条用户数据
       total: 10,
@@ -265,6 +262,11 @@ export default {
       }).catch(() => {
         this.$message.info('已取消删除')
       })
+    },
+    // 用戶列表全选或多选
+    selectAll (val) {
+      console.log(val)
+      // console.log(row)
     }
   },
   // 过滤器

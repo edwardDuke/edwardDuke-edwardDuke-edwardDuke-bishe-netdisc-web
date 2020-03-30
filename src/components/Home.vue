@@ -65,11 +65,13 @@ export default {
       activePath: '/welcome',
       menulist: [
         { id: 1001, path: '/', name: '用户管理', children: [{ id: 2001, path: '/user', name: '用户列表' }] },
-        { id: 1002, path: '/', name: '权限管理', children: [{ id: 2002, path: '/roles', name: '角色列表' }] }
+        { id: 1002, path: '/', name: '权限管理', children: [{ id: 2002, path: '/roles', name: '角色列表' }] },
+        { id: 1003, path: '/', name: '网盘管理', children: [{ id: 2003, path: '/files', name: '文件列表' }] }
       ],
       menuiconlist: {
         1001: 'el-icon-s-custom',
-        1002: 'el-icon-s-management'
+        1002: 'el-icon-s-management',
+        1003: 'el-icon-folder-opened'
       }
     }
   },
