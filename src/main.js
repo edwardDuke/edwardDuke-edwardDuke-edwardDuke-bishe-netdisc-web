@@ -7,7 +7,7 @@ import './plugins/element.js'
 import './assets/style/css/global.css'
 // 导入字体图标
 import './assets/style/iconfont/iconfont.css'
-
+import './plugins/particles.js'
 // 导入axios
 import axios from 'axios'
 

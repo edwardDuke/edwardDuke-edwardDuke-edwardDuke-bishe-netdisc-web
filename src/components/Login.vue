@@ -1,27 +1,26 @@
 <template>
-    <div class="login_container">
-        <div class="login_box">
-            <div class="title">登录</div>
-            <el-form ref="loginFromRef" :model="loginFrom" :rules="loginFromRules" label-width="0px" class="login_from">
-                <!-- 账号 -->
-                <el-form-item prop="username">
-                    <el-input v-model="loginFrom.username" prefix-icon="el-icon-user-solid" ></el-input>
-                </el-form-item>
-                <!-- 密码 -->
-                <el-form-item prop="password">
-                    <el-input v-model="loginFrom.password" prefix-icon="el-icon-lock" type="password"></el-input>
-                </el-form-item>
-                <!-- 按钮 -->
-                 <el-form-item  class="btns">
-                    <el-button type="primary" @click="login">登录</el-button>
-                    <el-button type="info" @click="resetLoginFrom">重置</el-button>
-                </el-form-item>
-            </el-form>
-        </div>
-    </div>
+  <div class="login_box">
+    <h2 class="title">登录</h2>
+    <el-form ref="loginFromRef" :model="loginFrom" :rules="loginFromRules"  class="login_from">
+      <!-- 账号 -->
+      <el-form-item prop="username">
+        <el-input v-model="loginFrom.username" prefix-icon="el-icon-user-solid" ></el-input>
+      </el-form-item>
+      <!-- 密码 -->
+      <el-form-item prop="password">
+        <el-input v-model="loginFrom.password" prefix-icon="el-icon-lock" type="password"></el-input>
+      </el-form-item>
+      <!-- 按钮 -->
+      <el-form-item  class="btns">
+        <el-button type="primary" @click="login">登录</el-button>
+        <el-button type="info" @click="resetLoginFrom">重置</el-button>
+      </el-form-item>
+    </el-form>
+  </div>
 </template>
 
 <script>
+
 export default {
   data () {
     return {
@@ -70,40 +69,37 @@ export default {
 </script>
 
 <style lang="less" scoped>
-.login_container{
-    background-color: #2b4b6b;
-    height: 100%;
-}
 
 .login_box{
-    width: 450px;
-    height: 300px;
-    background-color: #fff;
-    border-radius: 3px;
-    position: absolute;
-    top: 50%;
-    left: 50%;
-    transform: translate(-50%,-50%);
+  width: 450px;
+  height: 300px;
+  background-color: #F2F6FC;
+  border-radius: 3px;
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%,-50%);
 }
 
 .login_from{
-    position: absolute;
-    bottom: 0;
-    width: 100%;
-    padding: 0 20px;
-    box-sizing: border-box;
+  position: absolute;
+  bottom: 0;
+  width: 100%;
+  padding: 0 20px;
+  box-sizing: border-box;
 }
 
 .title{
-    position: absolute;
-    width: 100%;
-    font-size: 40px;
-    color: #2b4b6b;
-    font-family: "微软雅黑";
-    top: 0;
-    text-align: center;
-    padding: 30px 20px;
-    box-sizing: border-box;
+  position: absolute;
+  width: 100%;
+  font-size: 30px;
+  color: #2b4b6b;
+  font-family: "微软雅黑";
+  // font-weight: 600;
+  top: 0;
+  text-align: center;
+  padding: 30px 20px;
+  box-sizing: border-box;
 }
 
 .btns{
