@@ -56,6 +56,8 @@ export default {
       }
     }
   },
+  // 注册可以访问父类的方法
+  inject: ['saveMenuItem'],
   methods: {
     //   点击重置按钮
     resetRegisteredFrom () {
@@ -76,8 +78,9 @@ export default {
         }
         this.$message.success('注册成功')
         // 跳转界面
+        this.saveMenuItem('/login')
         window.sessionStorage.clear()
-        this.$router.push('/')
+        this.$router.push('/login')
       })
     }
   }

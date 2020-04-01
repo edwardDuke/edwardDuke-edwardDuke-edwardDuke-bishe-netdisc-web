@@ -40,14 +40,21 @@ export default {
       navigationbar: '/login'
     }
   },
+  // 向子组件提供当前页访问的方法
+  provide () {
+    return {
+      saveMenuItem: this.saveMenuItem
+    }
+  },
   created () {
     if (window.sessionStorage.getItem('navigationbarPath')) {
       this.navigationbar = window.sessionStorage.getItem('navigationbarPath')
     }
   },
   methods: {
-    saveMenuItem (index, indexPath) {
+    saveMenuItem (index) {
       this.navigationbar = index
+      console.log(this)
       window.sessionStorage.setItem('navigationbarPath', index)
     }
   }
