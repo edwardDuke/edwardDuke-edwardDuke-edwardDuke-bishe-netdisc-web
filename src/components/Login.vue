@@ -60,8 +60,14 @@ export default {
         this.$message.success('登录成功')
         // 登录成功保存token
         window.sessionStorage.setItem('token', '123456')
+        window.localStorage.setItem('token', '123456')
+        console.log(window.localStorage.getItem('token'))
+        this.$store.commit('saveToken', '123456')
+        this.$store.commit('changeLogin', true)
         // 跳转界面
-        this.$router.push('/home')
+        console.log('zzzz')
+        this.$router.replace('/home')
+        // this.$router.push('/home')
       })
     }
   }

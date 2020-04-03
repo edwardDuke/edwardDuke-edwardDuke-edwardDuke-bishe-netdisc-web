@@ -12,7 +12,7 @@ import './plugins/particles.js'
 import axios from 'axios'
 
 import './plugins/iview.js'
-axios.defaults.baseURL = 'localhost:8080'
+axios.defaults.baseURL = 'http://localhost:8080/'
 Vue.prototype.$http = axios
 
 Vue.config.productionTip = false

@@ -96,6 +96,9 @@ export default {
     // 退出
     logout () {
       window.sessionStorage.clear()
+      window.localStorage.clear()
+      this.$store.commit('saveToken', '')
+      this.$store.commit('changeLogin', false)
       this.$router.push('/login')
     },
     // 侧边栏展开点击跳转
