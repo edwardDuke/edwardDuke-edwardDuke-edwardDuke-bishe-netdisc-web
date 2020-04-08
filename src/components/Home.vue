@@ -123,8 +123,9 @@ export default {
     // justify-content: space-between;
     align-items: center;
     padding: 0;
+     z-index: 999;
     margin-bottom: 4px;
-    box-shadow: 0 3px 3px rgba(0, 0, 0, 0.15) !important;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15) !important;
     > div {
         width: 100%;
         display: flex;

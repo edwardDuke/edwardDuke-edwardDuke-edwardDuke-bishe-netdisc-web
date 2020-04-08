@@ -40,6 +40,11 @@ export default {
       }
     }
   },
+  // 注册可以访问父类的方法
+  inject: ['saveMenuItem'],
+  created () {
+    this.saveMenuItem('/login')
+  },
   methods: {
     //   点击重置按钮
     resetLoginFrom () {
@@ -59,15 +64,20 @@ export default {
         }
         this.$message.success('登录成功')
         // 登录成功保存token
-        window.sessionStorage.setItem('token', '123456')
-        window.localStorage.setItem('token', '123456')
-        console.log(window.localStorage.getItem('token'))
-        this.$store.commit('saveToken', '123456')
-        this.$store.commit('changeLogin', true)
         // 跳转界面
         console.log('zzzz')
-        this.$router.replace('/home')
-        // this.$router.push('/home')
+        if (this.loginFrom.username === 'admin') {
+          window.sessionStorage.setItem('token', 'admin')
+          window.localStorage.setItem('token', 'admin')
+          this.$store.commit('saveToken', 'admin')
+          this.$router.push('/home')
+        } else {
+          window.sessionStorage.setItem('token', 'user')
+          window.localStorage.setItem('token', 'user')
+          this.$store.commit('saveToken', 'user')
+          this.$router.push('/userhome')
+        }
+        this.$store.commit('changeLogin', true)
       })
     }
   }

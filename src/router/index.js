@@ -9,6 +9,9 @@ import User from '../components/user/User.vue'
 import Roles from '../components/authority/Roles.vue'
 import File from '../components/filemanage/File.vue'
 import store from '../store/index'
+import Userhome from '../components/Userhome.vue'
+import Userindex from '../components/file/Userindex.vue'
+import Usershare from '../components/share/Usershare.vue'
 
 Vue.use(VueRouter)
 
@@ -24,6 +27,7 @@ const routes = [
       { path: '/registered', component: Registered, meta: { title: '登录' } }
     ]
   },
+  // 管理员后台页面
   {
     path: '/home',
     component: Home,
@@ -46,6 +50,37 @@ const routes = [
       {
         path: '/files',
         component: File
+      }
+    ],
+    // 验证当前用户是否可以访问后台
+    beforeEnter: (to, from, next) => {
+      store.dispatch('judgeUsers').then(res => {
+        if (to.matched.some(m => m.meta.requireAuth)) {
+          if (res) {
+            next()
+          } else {
+            next(false)
+          }
+        }
+      })
+    }
+  },
+  // 用户界面
+  {
+    path: '/userhome',
+    component: Userhome,
+    meta: { requireAuth: true, title: '用户首页' },
+    redirect: '/userindex',
+    children: [
+      {
+        path: '/userindex',
+        component: Userindex,
+        meta: { title: '首页' }
+      },
+      {
+        path: '/usershare',
+        component: Usershare,
+        meta: { title: '分享' }
       }
     ]
   }

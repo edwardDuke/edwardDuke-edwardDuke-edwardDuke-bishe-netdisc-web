@@ -68,7 +68,8 @@ export default {
     align-items: center;
     justify-content: space-between;
     margin-bottom: 4px;
-    box-shadow: 0 3px 10px rgba(0, 0, 0, 0.15) !important;
+    z-index: 999;
+    box-shadow: 0 3px 5px rgba(0, 0, 0, 0.15) !important;
     > div {
         display: flex;
         align-items: center;

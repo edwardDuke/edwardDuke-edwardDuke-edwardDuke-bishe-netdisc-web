@@ -1,13 +1,15 @@
 import Vue from 'vue'
 import {
-  Button, Form, FormItem, Input, Message, Container,
+  Button, ButtonGroup, Form, FormItem, Input, Message, Container,
   Header, Aside, Main, Menu, Submenu, MenuItem, MenuItemGroup,
   Breadcrumb, BreadcrumbItem, Card, Row, Col, Table, TableColumn,
   Switch, Tooltip, Pagination, Dialog, MessageBox, Select, Option,
-  Link
+  Link, Avatar, Dropdown, DropdownMenu, DropdownItem, Progress, Image,
+  Upload, Tree
 } from 'element-ui'
 
 Vue.use(Button)
+Vue.use(ButtonGroup)
 Vue.use(Form)
 Vue.use(FormItem)
 Vue.use(Input)
@@ -33,5 +35,13 @@ Vue.use(Dialog)
 Vue.use(Select)
 Vue.use(Option)
 Vue.use(Link)
+Vue.use(Avatar)
+Vue.use(Dropdown)
+Vue.use(DropdownMenu)
+Vue.use(DropdownItem)
+Vue.use(Progress)
+Vue.use(Image)
+Vue.use(Upload)
+Vue.use(Tree)
 Vue.prototype.$message = Message
 Vue.prototype.$confirm = MessageBox.confirm

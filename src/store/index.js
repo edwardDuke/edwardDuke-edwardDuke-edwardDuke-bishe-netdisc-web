@@ -28,12 +28,22 @@ export default new Vuex.Store({
     // 检查用户登录状态
     getUserInfo (context) {
       return axios.get('').then(res => {
-        if (context.state.token === '123456') {
+        if (context.state.token === 'admin' || context.state.token === 'user') {
           context.commit('changeLogin', true)
         } else {
           setTimeout(() => {
             context.commit('changeLogin', false)
           }, 1000)
+        }
+      })
+    },
+    // 判断用户是否为管理员用户
+    judgeUsers (context) {
+      return axios.get('').then(res => {
+        if (context.state.token === 'admin') {
+          return true
+        } else {
+          return false
         }
       })
     }
