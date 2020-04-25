@@ -1,6 +1,7 @@
 import Vue from 'vue'
 import Vuex from 'vuex'
-import axios from 'axios'
+import axios from '../request/http.js'
+import { get } from '../request/http.js'
 
 Vue.use(Vuex)
 
@@ -20,6 +21,15 @@ export default new Vuex.Store({
     },
     saveToken (state, data) {
       state.token = data
+    },
+    saveUserInfo (state, data) {
+      if (data.name === '' || data.name == null) {
+        state.username = data.account
+      } else {
+        state.username = data.name
+      }
+      state.userId = data.id
+      state.userInfoObj = data
     }
   },
   getters: {
@@ -27,20 +37,27 @@ export default new Vuex.Store({
   actions: {
     // 检查用户登录状态
     getUserInfo (context) {
-      return axios.get('').then(res => {
-        if (context.state.token === 'admin' || context.state.token === 'user') {
+      console.log('进入store中检查用户登录状态')
+      // this.$http.get()
+      return get('/user/article').then(res => {
+        console.log('检查用户登录状态', res)
+        if (res.code === 200) {
+          console.log('登录状态')
           context.commit('changeLogin', true)
         } else {
-          setTimeout(() => {
-            context.commit('changeLogin', false)
-          }, 1000)
+          console.log('未登录')
+          context.commit('changeLogin', false)
         }
       })
+        .catch((err) => {
+          console.log('检查用户登录状态异常', err) // 错误信息
+        })
     },
     // 判断用户是否为管理员用户
     judgeUsers (context) {
-      return axios.get('').then(res => {
-        if (context.state.token === 'admin') {
+      return get('/user/roletype').then(res => {
+        console.log('判断用户是否为管理员用户', res)
+        if (res.code === 200) {
           return true
         } else {
           return false

@@ -86,11 +86,17 @@ export default {
       ismenashow: false
     }
   },
+  // 向子组件提供当前页访问的方法
+  provide () {
+    return {
+      saveMenuItem: this.saveMenuItem
+    }
+  },
   // 创建该页面自动执行create函数
   created () {
-    if (window.sessionStorage.getItem('activePath')) {
-      this.activePath = window.sessionStorage.getItem('activePath')
-    }
+    // if (window.sessionStorage.getItem('activePath')) {
+    //   this.activePath = window.sessionStorage.getItem('activePath')
+    // }
   },
   methods: {
     // 退出
@@ -102,10 +108,11 @@ export default {
       this.$router.push('/login')
     },
     // 侧边栏展开点击跳转
-    saveMenuItem (index, indexPath) {
-      console.log(index, indexPath, 1)
+    saveMenuItem (index) {
+      console.log(index, 1)
       //
-      window.sessionStorage.setItem('activePath', index)
+      this.activePath = index
+      // window.sessionStorage.setItem('activePath', index)
     },
     // 菜单栏伸缩
     mena () {

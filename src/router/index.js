@@ -37,19 +37,22 @@ const routes = [
       {
         path: '/welcome',
         component: Welcome,
-        meta: { title: '欢迎页面' }
+        meta: { title: '后台：欢迎页面' }
       },
       {
         path: '/user',
-        component: User
+        component: User,
+        meta: { title: '后台：用户管理' }
       },
       {
         path: '/roles',
-        component: Roles
+        component: Roles,
+        meta: { title: '后台：角色管理' }
       },
       {
         path: '/files',
-        component: File
+        component: File,
+        meta: { title: '后台：文件管理' }
       }
     ],
     // 验证当前用户是否可以访问后台
@@ -96,38 +99,43 @@ router.beforeEach((to, from, next) => {
   // to将要访问的路径，from代表从哪个路径跳转而来，next是一个函数，表示放行
   // if (to.path === '/index') return next()
   // // 如果直接访问login，通过
-  // if (to.path === '/login') return next()
-  // // 如果直接访问login，通过
-  // if (to.path === '/registered') return next()
+  if (to.path === '/login') return next()
+  // 如果直接访问注册，通过
+  if (to.path === '/registered') return next()
   // 其他则需要先判断，先获取token
 
   // const tokenStr = window.sessionStorage.getItem('token')
   // if (!tokenStr) return next('/login')
   // next()
-  const tokenStr = window.localStorage.getItem('token')
-  // console.log(window.localStorage.getItem('token'))
   if (window.localStorage.getItem('token')) {
+    const tokenStr = window.localStorage.getItem('token')
     store.commit('saveToken', tokenStr)
   }
-  console.log(!store.state.isLogin)
+  if (window.localStorage.getItem('userInfo')) {
+    const userInfo = JSON.parse(window.localStorage.getItem('userInfo'))
+    store.commit('saveUserInfo', userInfo)
+  }
+  console.log('当前登录状态', store.state.isLogin)
   store.dispatch('getUserInfo').then(() => {
-    console.log('1111')
-    console.log(to.matched)
+    console.log('检查登录状态成功后')
     if (to.matched.some(m => m.meta.requireAuth)) {
-      console.log('2222')
+      console.log('获取登录状态', store.state.isLogin)
       if (!store.state.isLogin) { // 没有登录
-        console.log('3333')
+        console.log('没有登录')
         next({
-          path: '/',
+          path: '/login',
           query: { redirect: to.fullPath }
         }) // 将to参数中的url传递给login页面进行操作
+      } else {
+        next()
       }
     }
     /* 路由发生变化修改页面title */
     if (to.meta.title) {
       document.title = to.meta.title
     }
-    next()
+    // console.log('4444')
+    // next()
   })
 })
 export default router

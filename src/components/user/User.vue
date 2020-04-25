@@ -155,7 +155,10 @@ export default {
       }
     }
   },
+  // 注册可以访问父类的方法
+  inject: ['saveMenuItem'],
   created () {
+    this.saveMenuItem('/user')
     // 获取用户信息
     this.getUserInfo()
   },

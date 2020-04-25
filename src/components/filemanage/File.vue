@@ -100,7 +100,10 @@ export default {
       selectionFileInfo: []
     }
   },
+  // 注册可以访问父类的方法
+  inject: ['saveMenuItem'],
   created () {
+    this.saveMenuItem('/files')
     this.getFilesInfo()
   },
   methods: {

@@ -51,7 +51,7 @@ export default {
       navigationbar: '/userindex',
       // 用户信息
       userinfo: {
-        username: '15766936118',
+        username: this.$store.state.username,
         userImg: '../assets/images/user.png'
       }
     }
@@ -61,6 +61,10 @@ export default {
     return {
       saveMenuItem: this.saveMenuItem
     }
+  },
+  created () {
+    // this.userinfo.username = this.$store.state.username
+    // console.log('0000000000000000000', this.userinfo.username)
   },
   methods: {
     // 导航菜单栏

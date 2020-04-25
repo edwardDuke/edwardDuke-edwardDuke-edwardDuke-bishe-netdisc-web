@@ -20,7 +20,6 @@
 </template>
 
 <script>
-
 export default {
   data () {
     return {
@@ -55,29 +54,24 @@ export default {
       this.$refs.loginFromRef.validate(async valid => {
         if (!valid) { return }
         // 向后端请求验证并把返回的数据中data数据转为result
-        // const { data: result } = await this.$http.post('/login', this.loginFrom)
-        // console.log(result)
-        // 判断请求是否成功
-        // eslint-disable-next-line no-constant-condition
-        if (false) {
-          return this.$message.error('登录失败')
-        }
-        this.$message.success('登录成功')
-        // 登录成功保存token
-        // 跳转界面
-        console.log('zzzz')
-        if (this.loginFrom.username === 'admin') {
-          window.sessionStorage.setItem('token', 'admin')
-          window.localStorage.setItem('token', 'admin')
-          this.$store.commit('saveToken', 'admin')
-          this.$router.push('/home')
-        } else {
-          window.sessionStorage.setItem('token', 'user')
-          window.localStorage.setItem('token', 'user')
-          this.$store.commit('saveToken', 'user')
-          this.$router.push('/userhome')
-        }
-        this.$store.commit('changeLogin', true)
+        this.$post('/user/login', this.loginFrom).then((result) => {
+        // this.$http.post('/login', this.$qs.stringify(this.loginFrom)).then((result) => {
+          if (result.code === 200) {
+            console.log('aaaaaaaa', result)
+            // 存储token
+            this.$store.commit('saveToken', result.data.Token)
+            window.sessionStorage.setItem('token', result.data.Token)
+            window.localStorage.setItem('token', result.data.Token)
+            // 储存用户信息
+            this.$store.commit('saveUserInfo', result.data.userInfo)
+            window.localStorage.setItem('userInfo', JSON.stringify(result.data.userInfo))
+            this.$router.push('/userindex')
+            this.$message.success('登录成功')
+          }
+        }).catch((err) => {
+          console.log('请求错误111', err)
+          this.$message.error(err.message)
+        })
       })
     }
   }

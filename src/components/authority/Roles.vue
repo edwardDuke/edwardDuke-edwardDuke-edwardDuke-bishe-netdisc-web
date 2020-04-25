@@ -149,7 +149,9 @@ export default {
       showSetRightDialogVisible: false
     }
   },
+  inject: ['saveMenuItem'],
   created () {
+    this.saveMenuItem('/roles')
     //   获取角色信息
     this.getRolesInfo()
   },

@@ -70,17 +70,20 @@ export default {
         if (!valid) { return }
         // 向后端请求验证并把返回的数据中data数据转为result
         // const { data: result } = await this.$http.post('/login', this.loginFrom)
-        // console.log(result)
-        // 判断请求是否成功
-        // eslint-disable-next-line no-constant-condition
-        if (false) {
-          return this.$message.error('注册失败')
-        }
-        this.$message.success('注册成功')
-        // 跳转界面
-        this.saveMenuItem('/login')
-        window.sessionStorage.clear()
-        this.$router.push('/login')
+        var username = this.registeredFrom.account
+        var password = this.registeredFrom.password
+        this.$post('/user/register', {username: username, password: password }).then((result) => {
+          if (result.code === 200) {
+            this.$message.success('注册成功')
+            // 跳转界面
+            this.saveMenuItem('/login')
+            window.sessionStorage.clear()
+            this.$router.push('/login')
+          }
+        }).catch((err) => {
+          console.log('请求错误111', err)
+          this.$message.error(err.message)
+        })
       })
     }
   }

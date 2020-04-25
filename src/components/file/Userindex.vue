@@ -9,22 +9,19 @@
         text-color="#666666"
         active-text-color="#09aaff"
         @select="searchByindex">
-        <el-menu-item index="1">
-          <i class="el-icon-document-copy"></i>
-          <span>全部文件</span>
-        </el-menu-item>
-        <el-menu-item index="2"><i ></i><span class="menu-title">图片</span></el-menu-item>
-        <el-menu-item index="3"><span class="menu-title">文档</span></el-menu-item>
-        <el-menu-item index="4"><span class="menu-title">视频</span></el-menu-item>
-        <el-menu-item index="5"><span class="menu-title">音乐</span></el-menu-item>
-        <el-menu-item index="6"><span class="menu-title">其他</span></el-menu-item>
+        <el-menu-item index="1"><i class="el-icon-document-copy"></i><span>全部文件</span></el-menu-item>
+        <el-menu-item index="picture"><span class="menu-title">图片</span></el-menu-item>
+        <el-menu-item index="document"><span class="menu-title">文档</span></el-menu-item>
+        <el-menu-item index="video"><span class="menu-title">视频</span></el-menu-item>
+        <el-menu-item index="music"><span class="menu-title">音乐</span></el-menu-item>
+        <el-menu-item index="other"><span class="menu-title">其他</span></el-menu-item>
       </el-menu>
       <!-- 侧边栏下半部分 -->
       <div>
         <div class="schedule">
-          <el-progress :percentage="10" color="#6f7ad3" :show-text="false"></el-progress>
+          <el-progress :percentage="storage.proportion" color="#6f7ad3" :show-text="false"></el-progress>
           <!-- <el-progress type="dashboard" percentage="10" width="100" :show-text="false" color="#6f7ad3"></el-progress> -->
-          <span>容量：10G/100G</span>
+          <span>容量：{{storage.useStorage}}/{{storage.allStorage}}</span>
         </div>
       </div>
     </el-aside>
@@ -53,7 +50,7 @@
           <el-button-group v-if="oneOrMoreShowmore.isshow">
             <el-button size="medium" icon="el-icon-share" @click="shareOneOrMoreFile">分享</el-button>
             <el-button size="medium" icon="el-icon-edit" @click="downloadOneOrMoreFile">下载</el-button>
-            <el-button size="medium" icon="el-icon-delete" @click="deleteOneOrMoreFile">删除</el-button>
+            <el-button size="medium" icon="el-icon-delete" @click="deleteOneOrMoreFile('more')">删除</el-button>
             <el-button size="medium" :disabled="!oneOrMoreShowmore.isOneFile" @click="showRenameFolder">重命名</el-button>
             <el-button size="medium" @click="copyFileFolder('more')">复制到</el-button>
             <el-button size="medium" @click="moveFileFolder('more')">移动到</el-button>
@@ -63,9 +60,10 @@
         <el-col :span="6">
           <el-input
             placeholder="搜索文件"
-            v-model="showFilesCondition.inputSearch"
+            v-model="showFilesCondition.name"
             size="small"
-            clearable>
+            clearable
+            @clear = "getFilesList">
             <!-- <i slot="prefix" class="el-input__icon el-icon-search"></i> -->
             <el-button slot="append" icon="el-icon-search" @click="getFilesInfo"></el-button>
           </el-input>
@@ -73,9 +71,15 @@
       </el-row>
       <!-- 文件导航面包屑 -->
       <el-breadcrumb separator="/">
-        <el-breadcrumb-item><a href="/">全部文件</a></el-breadcrumb-item>
+        <template v-for=" site in getdirc.allPath">
+          <el-breadcrumb-item :key="site.id" >
+            <a v-if="getdirc.id !=site.id" @click="getFilesListById(site)">{{site.name}}</a>
+            <a v-else >{{site.name}}</a>
+            </el-breadcrumb-item>
+        </template>
+        <!-- <el-breadcrumb-item ><a href="/aa">全部文件</a></el-breadcrumb-item>
         <el-breadcrumb-item><a href="/">目录1</a></el-breadcrumb-item>
-        <el-breadcrumb-item><a href="/">目录2</a></el-breadcrumb-item>
+        <el-breadcrumb-item><a href="/">目录2</a></el-breadcrumb-item> -->
       </el-breadcrumb>
       <!-- 文件列表显示 -->
       <el-table
@@ -88,12 +92,18 @@
         <!-- 多选框 -->
         <el-table-column type="selection" width="35"></el-table-column>
         <!-- 文件名 -->
-        <el-table-column  prop="filename" label="文件名" width="600">
+        <el-table-column  prop="name" label="文件名" width="600">
           <template slot-scope="scope">
-            <el-link :underline="false" @click="getFilesListById(scope.row)">
+            <el-link :underline="false" v-if="scope.row.type == 'dir'" @click="getFilesListById(scope.row)">
               <div class="file-name">
                 <img :src="scope.row.imgpath" style="max-width: 30px;" />
-                <span>{{scope.row.filename}}</span>
+                <span>{{scope.row.name}}</span>
+              </div>
+            </el-link>
+            <el-link :underline="false" v-else >
+              <div class="file-name">
+                <img :src="scope.row.imgpath" style="max-width: 30px;" />
+                <span>{{scope.row.name}}</span>
               </div>
             </el-link>
           </template>
@@ -122,8 +132,9 @@
             </el-dropdown>
           </template>
         </el-table-column>
-          <el-table-column prop="size" label="大小" ></el-table-column>
-          <el-table-column prop="date" label="修改日期" width="200"></el-table-column>
+        <el-table-column prop="size" label="大小" ></el-table-column>
+        <el-table-column prop="lastmodifytime" label="修改日期" width="200"></el-table-column>
+        <!-- <el-table-column prop="test" label="修改日期" width="200"></el-table-column> -->
       </el-table>
     </el-main>
 
@@ -134,8 +145,8 @@
       :close-on-click-modal="false"
       width="50%" @close="newFolderClose">
       <el-form :model="dialogBox.newFolderFrom" :rules="dialogBox.newFolderFromRules" ref="newFolderFromRef" label-width="80px">
-          <el-form-item label="文件名" prop="filename">
-              <el-input v-model="dialogBox.newFolderFrom.filename"></el-input>
+          <el-form-item label="文件名" prop="name">
+              <el-input v-model="dialogBox.newFolderFrom.name"></el-input>
           </el-form-item>
       </el-form>
       <span slot="footer">
@@ -151,8 +162,8 @@
       :close-on-click-modal="false"
       width="50%" @close="renameFolderClose">
       <el-form :model="dialogBox.renameFolderFrom" :rules="dialogBox.renameFolderFromRules" ref="renameFolderFromRef" label-width="80px">
-          <el-form-item label="文件名" prop="filename">
-              <el-input v-model="dialogBox.renameFolderFrom.filename"></el-input>
+          <el-form-item label="文件名" prop="name">
+              <el-input v-model="dialogBox.renameFolderFrom.name"></el-input>
           </el-form-item>
       </el-form>
       <span slot="footer">
@@ -209,11 +220,12 @@ export default {
         newFolderVisible: false,
         // 新建文件表单数据
         newFolderFrom: {
-          filename: ''
+          name: '',
+          pid: ''
         },
         // 新建文件表单的验证规则
         newFolderFromRules: {
-          filename: [
+          name: [
             { required: true, message: '请输入文件名称', trigger: 'blur' }
           ]
         },
@@ -222,35 +234,23 @@ export default {
         renameFolderVisible: false,
         // 重命名表单数据
         renameFolderFrom: {
-          filename: ''
+          id: '',
+          name: '',
+          type: ''
         },
         // 重命名表单的验证规则
         renameFolderFromRules: {
-          filename: [
+          name: [
             { required: true, message: '请输入文件名称', trigger: 'blur' }
           ]
         },
 
         // 显示复制到和移动到共同的数据
-        copyandmoveData: [
-          {
-            id: '111111',
-            foldername: '一级 1',
-            children: [{
-              foldername: '二级 1-1',
-              children: [{
-                foldername: '三级 1-1-1',
-                children: [{
-                  foldername: '四级 1-1-1'
-                }]
-              }]
-            }]
-          }
-        ],
+        copyandmoveData: [],
         // 显示复制到和移动到共同的下标
         copyandmoveProps: {
           children: 'children',
-          label: 'foldername'
+          label: 'name'
         },
         // 选中的当前目录数据
         selectedDirecData: [],
@@ -262,21 +262,21 @@ export default {
       },
       // 这个是查询文件条件信息
       showFilesCondition: {
-        inputSearch: ''
+        name: ''
       },
       // 这是演示最初的文件列表信息
-      endFileLists: [
-        { filename: '目录1', size: '-', date: '2020-4-4 12:00:00' },
-        { filename: '目录2', size: '-', date: '2020-4-4 12:00:00' },
-        { filename: '目录3', size: '-', date: '2020-4-4 12:00:00' },
-        { filename: '目录4', size: '-', date: '2020-4-4 12:00:00' },
-        { filename: '目录5', size: '-', date: '2020-4-4 12:00:00' },
-        { filename: '目录6', size: '-', date: '2020-4-4 12:00:00' },
-        { filename: '目录7', size: '-', date: '2020-4-4 12:00:00' },
-        { filename: '目录8', size: '-', date: '2020-4-4 12:00:00' },
-        { filename: '文件1', filetype: 'zip', size: '4.8KB', date: '2020-4-4 12:00:00' },
-        { filename: '文件2', filetype: 'txt', size: '54.9M', date: '2020-4-4 12:00:00' }
-      ],
+      // endFileLists: [
+      //   { filename: '目录1', size: '-', date: '2020-4-4 12:00:00' },
+      //   { filename: '目录2', size: '-', date: '2020-4-4 12:00:00' },
+      //   { filename: '目录3', size: '-', date: '2020-4-4 12:00:00' },
+      //   { filename: '目录4', size: '-', date: '2020-4-4 12:00:00' },
+      //   { filename: '目录5', size: '-', date: '2020-4-4 12:00:00' },
+      //   { filename: '目录6', size: '-', date: '2020-4-4 12:00:00' },
+      //   { filename: '目录7', size: '-', date: '2020-4-4 12:00:00' },
+      //   { filename: '目录8', size: '-', date: '2020-4-4 12:00:00' },
+      //   { filename: '文件1', filetype: 'zip', size: '4.8KB', date: '2020-4-4 12:00:00' },
+      //   { filename: '文件2', filetype: 'txt', size: '54.9M', date: '2020-4-4 12:00:00' }
+      // ],
       // 这是处理过后的文件列表信息
       tableData: [],
       oneShowmore: [],
@@ -285,7 +285,24 @@ export default {
         isshow: false,
         isOneFile: true,
         data: []
-      }
+      },
+
+      // 获取目录查询条件
+      directory: {
+        pid: ''
+      },
+      // 从后端获取到的目录和文件
+      getdirc: {},
+      // 存储空间大小
+      storage: {
+        proportion: 0,
+        useStorage: '0',
+        allStorage: '0'
+      },
+      // 从后端获取到所有的目录及其子目录
+      getAllDircList: [],
+      // 文件导航面包屑
+      navigationBar: []
     }
   },
   // 注册可以访问父类的方法
@@ -293,46 +310,203 @@ export default {
   // 创建该页面自动执行create函数
   created () {
     this.saveMenuItem('/userindex')
+    // 从后台获取存储信息
+    this.getStorageSize()
     // 从后台获取文件列表信息
     this.getFilesList()
+    // 从后台获取所有目录及其子目录
+    this.getAllDirecList()
   },
   methods: {
 
     // 获取文件信息
     getFilesList () {
+      // 清空数据
+      this.getdirc = {}
+      this.tableData = []
       // 1、发送请求获取后端数据
-      // 2、处理数据
-      const temData = this.endFileLists
-
-      // var newFileListInfo = []
-      for (var i = 0; i < temData.length; i++) {
-        var imgpath = ''
-        var type = temData[i].filetype
-        // 判断类型
-        if (type) {
-          imgpath = this.getFileImagePath(type)
-          //   重置是文件的名字
-          temData[i].filename = temData[i].filename + '.' + type
-        } else {
-          imgpath = this.getFileImagePath('dir')
+      console.log(this.directory)
+      // 获取目录和文件
+      this.$get('/dircetory/getdirc', this.directory).then(result => {
+        console.log('=======>', result)
+        if (result.code === 200) {
+          this.getdirc = result.data
         }
-        // var dataMap = temData[i]
-        this.$set(temData[i], 'imgpath', imgpath)
-        // temData[i].imgpath = imgpath
-        // 添加显示条件
-        this.$set(temData[i], 'isshow', false)
-        this.$set(temData[i], 'ismore', false)
-        temData[i].isshow = false
-        temData[i].ismore = false
-        // newFileListInfo.push(dataMap)
-      }
+        console.log(this.getdirc)
 
-      this.tableData = temData
-      console.log('获取文件列表为', this.tableData)
+        // 处理目录数据和文件数据
+        const direcProcess = this.getdirc.dirc
+        // 1、处理目录
+        // for (var i = 0; i < direcProcess.length; i++) {
+        //   // 添加显示图片路径
+        //   var direImgpath = this.getFileImagePath('dir')
+        //   this.$set(direcProcess[i], 'imgpath', direImgpath)
+        //   // 添加显示隐藏条件
+        //   this.$set(direcProcess[i], 'isshow', false)
+        //   this.$set(direcProcess[i], 'ismore', false)
+
+        //   // 添加到显示板上
+        //   this.tableData.push(direcProcess[i])
+        // }
+        console.log('===>', direcProcess)
+        // 2、处理文件
+        const fileProcess = this.getdirc.file
+        // for (var num = 0; num < fileProcess.length; num++) {
+        //   var fileImgpath = ''
+        //   var type = fileProcess[num].type
+        //   // 判断类型，查找不出来暂用目录代替
+        //   if (type) {
+        //     fileImgpath = this.getFileImagePath(type)
+        //     //   重置是文件的名字
+        //     fileProcess[num].name = fileProcess[num].name + '.' + type
+        //   } else {
+        //     fileImgpath = this.getFileImagePath('dir')
+        //   }
+        //   // 添加显示图片路径
+        //   this.$set(fileProcess[num], 'imgpath', fileImgpath)
+        //   // 添加显示隐藏条件
+        //   this.$set(fileProcess[num], 'isshow', false)
+        //   this.$set(fileProcess[num], 'ismore', false)
+
+        //   // 处理文件大小
+        //   if (fileProcess[num].size / 1024 < 1) {
+        //     fileProcess[num].size = (fileProcess[num].size / 1024).toFixed(2) + 'K'
+        //   }
+        //   if (fileProcess[num].size / 1024 >= 1 && fileProcess[num].size / 1024 < 1024) {
+        //     fileProcess[num].size = (fileProcess[num].size / 1024).toFixed(2) + 'M'
+        //   }
+        //   if (fileProcess[num].size / 1024 >= 1024) {
+        //     fileProcess[num].size = (fileProcess[num].size / (1024 * 1024)).toFixed(2) + 'G'
+        //   }
+        //   // 添加到显示板上
+        //   this.tableData.push(fileProcess[num])
+        // }
+        this.dataProcessing(direcProcess, fileProcess)
+        console.log('获取文件列表为', this.tableData)
+      }).catch((err) => {
+        this.$message.error(err.message)
+      })
+      // // 2、处理数据
+      // const temData = this.endFileLists
+
+      // // var newFileListInfo = []
+      // for (var i = 0; i < temData.length; i++) {
+      //   var imgpath = ''
+      //   var type = temData[i].filetype
+      //   // 判断类型
+      //   if (type) {
+      //     imgpath = this.getFileImagePath(type)
+      //     //   重置是文件的名字
+      //     temData[i].filename = temData[i].filename + '.' + type
+      //   } else {
+      //     imgpath = this.getFileImagePath('dir')
+      //   }
+      //   // var dataMap = temData[i]
+      //   this.$set(temData[i], 'imgpath', imgpath)
+      //   // temData[i].imgpath = imgpath
+      //   // 添加显示条件
+      //   this.$set(temData[i], 'isshow', false)
+      //   this.$set(temData[i], 'ismore', false)
+      //   temData[i].isshow = false
+      //   temData[i].ismore = false
+      //   // newFileListInfo.push(dataMap)
+      // }
+
+      // this.tableData = temData
+    },
+    // 获取存储空间大小
+    getStorageSize () {
+      // 获取储存空间大小
+      this.$get('/user/getstorage').then((result) => {
+        if (result.code === 200) {
+          this.storage.proportion = (result.data.useStorage / result.data.allStorage) * 100
+          if (result.data.useStorage / 1024 < 1) {
+            this.storage.useStorage = (result.data.useStorage / 1024).toFixed(2) + 'K'
+          }
+          if (result.data.useStorage / 1024 >= 1 && result.data.useStorage / 1024 < 1024) {
+            this.storage.useStorage = (result.data.useStorage / 1024).toFixed(2) + 'M'
+          }
+          if (result.data.useStorage / 1024 >= 1024) {
+            this.storage.useStorage = (result.data.useStorage / (1024 * 1024)).toFixed(2) + 'G'
+          }
+          this.storage.allStorage = result.data.allStorage / (1024 * 1024) + 'G'
+        }
+      }).catch((err) => {
+        console.log(err)
+      })
+    },
+    // 获取所有目录及其子目录
+    getAllDirecList () {
+      // 清空数据
+      this.dialogBox.copyandmoveData = []
+      // 发起请求获取
+      this.$get('/dircetory/listdirc').then((result) => {
+        if (result.code === 200) {
+          this.dialogBox.copyandmoveData = result.data
+        }
+      }).catch((err) => {
+        console.log('请求错误111', err)
+        this.$message.error(err.message)
+      })
     },
     // 获取某个文件列表
     getFilesListById (filesInfo) {
-      console.log('点击了某个文件，文件名为', filesInfo.filename)
+      console.log('点击了某个文件，文件名为', filesInfo.name, '当前id为', filesInfo.id)
+      // 传入id给获取目录查询条件
+      this.directory.pid = filesInfo.id
+
+      // 调用查询目录的方法
+      this.getFilesList()
+    },
+    // 处理文件目录
+    dataProcessing (direcProcess, fileProcess) {
+      // 1、处理目录
+      if (direcProcess != null) {
+        for (var i = 0; i < direcProcess.length; i++) {
+          // 添加显示图片路径
+          var direImgpath = this.getFileImagePath('dir')
+          this.$set(direcProcess[i], 'imgpath', direImgpath)
+          // 添加显示隐藏条件
+          this.$set(direcProcess[i], 'isshow', false)
+          this.$set(direcProcess[i], 'ismore', false)
+
+          // 添加到显示板上
+          this.tableData.push(direcProcess[i])
+        }
+      }
+      // 2、处理文件
+      if (fileProcess != null) {
+        for (var num = 0; num < fileProcess.length; num++) {
+          var fileImgpath = ''
+          var type = fileProcess[num].type
+          // 判断类型，查找不出来暂用目录代替
+          if (type) {
+            fileImgpath = this.getFileImagePath(type)
+            //   重置是文件的名字
+            fileProcess[num].name = fileProcess[num].name + '.' + type
+          } else {
+            fileImgpath = this.getFileImagePath('dir')
+          }
+          // 添加显示图片路径
+          this.$set(fileProcess[num], 'imgpath', fileImgpath)
+          // 添加显示隐藏条件
+          this.$set(fileProcess[num], 'isshow', false)
+          this.$set(fileProcess[num], 'ismore', false)
+
+          // 处理文件大小
+          if (fileProcess[num].size / 1024 < 1) {
+            fileProcess[num].size = (fileProcess[num].size / 1024).toFixed(2) + 'K'
+          }
+          if (fileProcess[num].size / 1024 >= 1 && fileProcess[num].size / 1024 < 1024) {
+            fileProcess[num].size = (fileProcess[num].size / 1024).toFixed(2) + 'M'
+          }
+          if (fileProcess[num].size / 1024 >= 1024) {
+            fileProcess[num].size = (fileProcess[num].size / (1024 * 1024)).toFixed(2) + 'G'
+          }
+          // 添加到显示板上
+          this.tableData.push(fileProcess[num])
+        }
+      }
     },
     // 处理文件列表图片显示问题
     getFileImagePath (type) {
@@ -340,14 +514,57 @@ export default {
     },
     // 左边菜单栏按类型搜索文件
     searchByindex (index) {
-      this.$message.info(index)
+      // 清空数据
+      this.getdirc = {}
+      this.tableData = []
+      // 清除pid
+      this.directory.pid = ''
+      // this.$message.info(index)
+      if (index === '1') {
+        this.getFilesList()
+      } else {
+        this.$get('file/type', { type: index }).then((result) => {
+          console.log('左边菜单栏按类型搜索文件')
+          if (result.code === 200) {
+            console.log('请求成功,返回数据', result.data)
+            this.getdirc = result.data
+          }
+          const direcProcess = this.getdirc.dirc
+          const fileProcess = this.getdirc.file
+          this.dataProcessing(direcProcess, fileProcess)
+          console.log('获取文件列表为', this.tableData)
+        }).catch((err) => {
+          console.log('请求失败', err)
+          this.$message.error(err.message)
+        })
+      }
     },
     // 按内容搜索文件
     getFilesInfo () {
-      console.log('点击了搜索')
+      if (this.showFilesCondition.name === '') { return }
+      // 清空数据
+      this.getdirc = {}
+      this.tableData = []
+      // 清除pid
+      this.directory.pid = ''
+      console.log('点击了搜索,输入框内容为', this.showFilesCondition.name)
+      this.$get('/dircetory/find', this.showFilesCondition).then((result) => {
+        if (result.code === 200) {
+          console.log('请求成功,返回数据', result.data)
+          this.getdirc = result.data
+        }
+        const direcProcess = this.getdirc.dirc
+        const fileProcess = this.getdirc.file
+        this.dataProcessing(direcProcess, fileProcess)
+        console.log('获取文件列表为', this.tableData)
+      }).catch((err) => {
+        console.log('请求失败', err)
+        this.$message.error(err.message)
+      })
       // this.$message.info(this.showFilesCondition)
-      this.getFilesList()
+      // this.getFilesList()
     },
+
     // 当鼠标移入一个文件的时候触发显示操作
     mouseInfile (row, column, cell, event) {
       row.isshow = true
@@ -367,7 +584,11 @@ export default {
       if (!row.ismore) {
         row.isshow = true
         row.ismore = true
-        this.oneShowmore = row
+        var filedata = {}
+        filedata.id = row.id
+        filedata.type = row.type
+        filedata.name = row.name
+        this.oneShowmore = [filedata]
         console.log('鼠标在更多操作，进入', this.oneShowmore)
       } else {
         row.isshow = false
@@ -396,8 +617,12 @@ export default {
         this.oneOrMoreShowmore.isOneFile = false
         // this.showmore.data = selection
       }
+      var fileAndDireData = []
+      for (var item in selection) {
+        fileAndDireData.push({ id: selection[item].id, type: selection[item].type, name: selection[item].name })
+      }
 
-      this.oneOrMoreShowmore.data = selection
+      this.oneOrMoreShowmore.data = fileAndDireData
       console.log('all:', selection)
       console.log('oneOrMoreShowmore:', this.oneOrMoreShowmore.data)
     },
@@ -440,46 +665,94 @@ export default {
       this.$refs.newFolderFromRef.validate(async valid => {
         console.log(valid)
         if (!valid) { return }
+        // 传递当前pid
+        this.dialogBox.newFolderFrom.pid = this.getdirc.id
+        // 发起创建文件请求
+        this.$post('/dircetory/mkdir', this.dialogBox.newFolderFrom).then((result) => {
+          if (result.code === 200) {
+            this.$message.success('创建文件成功')
+            // 隐藏对话框
+            this.dialogBox.newFolderVisible = false
+            // this.dialogBox.isdialogBox = false
+            // 重新获取文件信息列表
+            this.getFilesList()
+            // 重新获取所有目录及其子目录
+            this.getAllDirecList()
+          }
+        }).catch((err) => {
+          console.log('请求错误111', err)
+          this.$message.error(err.message)
+        })
         // const { data: result } = await this.$http.post('/user/adduser', this.newUserFrom)
         // if (result !== 200) {
         //   return this.$message.error('添加用户失败')
         // }
-        this.$message.success('创建文件成功')
-        // 隐藏对话框
-        this.dialogBox.newFolderVisible = false
-        // this.dialogBox.isdialogBox = false
-        // 重新获取文件信息列表
-        this.getFilesList()
+        // this.$message.success('创建文件成功')
+        // // 隐藏对话框
+        // this.dialogBox.newFolderVisible = false
+        // // this.dialogBox.isdialogBox = false
+        // // 重新获取文件信息列表
+        // this.getFilesList()
       })
     },
     // 点击重命名
     showRenameFolder (fromSingleOrMul) {
       console.log('点击了重命名')
+      console.log('重命名参数', fromSingleOrMul)
+      if (fromSingleOrMul === 'one') {
+        // console.log('当前移动到对话框是点击单个文件打开的')
+        console.log('单个', this.oneShowmore)
+        // console.log('单个或多个', this.oneOrMoreShowmore)
+        this.dialogBox.renameFolderFrom = this.oneShowmore[0]
+        this.dialogBox.renameFolderFrom.name = this.oneShowmore[0].name.split('.')[0]
+      } else {
+        this.dialogBox.renameFolderFrom = this.oneOrMoreShowmore.data[0]
+        this.dialogBox.renameFolderFrom.name = this.oneOrMoreShowmore.data[0].name.split('.')[0]
+      }
+      console.log('重命名参数', this.dialogBox.renameFolderFrom)
       // 显示对话框
       this.dialogBox.renameFolderVisible = true
       this.dialogBox.fromSingleOrMul = fromSingleOrMul
     },
-    // 监听新建文件夹关闭，并重置当前表单
+    // 监听重命名对话框关闭，并重置当前表单
     renameFolderClose () {
       this.$refs.renameFolderFromRef.resetFields()
       this.dialogBox.fromSingleOrMul = ''
+      this.dialogBox.renameFolderFrom = {}
     },
-    // 在创建文件对话框点击确定
+    // 在重命名对话框点击确定
     renameFolder () {
       // 表单预校验
       this.$refs.renameFolderFromRef.validate(async valid => {
         console.log(valid)
         if (!valid) { return }
+        var form = this.dialogBox.renameFolderFrom
+        var url = ''
+        if (form.type === 'dir') {
+          url = '/dircetory/renamedirc'
+        } else {
+          url = '/file/renamefile'
+        }
+        this.$post(url, { id: form.id, name: form.name }).then((result) => {
+          if (result.code === 200) {
+            this.$message.success(result.message)
+            // 隐藏对话框
+            this.dialogBox.renameFolderVisible = false
+            this.dialogBox.fromSingleOrMul = false
+
+            // 重新获取文件信息列表
+            this.getFilesList()
+            // 重新获取目录及其子目录
+            this.getAllDirecList()
+          }
+        }).catch((err) => {
+          console.log('请求失败', err)
+          this.$message.error('操作失败')
+        })
         // const { data: result } = await this.$http.post('/user/adduser', this.newUserFrom)
         // if (result !== 200) {
         //   return this.$message.error('添加用户失败')
         // }
-        this.$message.success('重命名成功')
-        // 隐藏对话框
-        this.dialogBox.renameFolderVisible = false
-        this.dialogBox.fromSingleOrMul = false
-        // 重新获取文件信息列表
-        this.getFilesList()
       })
     },
     // 点击单个文件分享
@@ -518,41 +791,66 @@ export default {
       var temdata = this.oneShowmore
       console.log('点击单个文件删除', temdata)
       // 弹出弹窗
-      this.$confirm('此操作将永久删除' + temdata.filename + ', 是否继续?', '提示', {
+      this.$confirm('此操作将永久删除' + temdata[0].name + ', 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
+        var params = new URLSearchParams()
+        params.append('sourceListId', JSON.stringify(temdata))
         // 调用删除接口
-        console.log('调用删除接口')
-        // 重新获取用户列表
-        console.log('重新获取文件列表')
-        this.$message.success('删除成功')
+        this.$get('/dircetory/deletedirc', params).then((result) => {
+          if (result.code === 200) {
+            this.$message.success(result.message)
+            // 重新获取目录列表
+            console.log('重新获取目录列表')
+            this.getFilesList()
+            this.getAllDirecList()
+            this.getStorageSize()
+          }
+        }).catch((err) => {
+          console.log('操作删除失败', err)
+          this.$message.error('删除失败')
+        })
       }).catch(() => {
         this.$message.info('已取消删除')
       })
     },
     // 点击单个或者多个文件删除
     deleteOneOrMoreFile () {
+      // 拿取当前要删除的数据
+      var temdata = this.oneOrMoreShowmore.data
       console.log('点击单个或者多个文件删除', this.oneOrMoreShowmore.data)
       var alldeletefilename = ''
       var filename = []
       this.oneOrMoreShowmore.data.forEach(item => {
-        filename.push(item.filename)
+        filename.push(item.name)
       })
       alldeletefilename = filename.join(' ')
       console.log(alldeletefilename)
       // 弹出弹窗
-      this.$confirm('此操作将永久删除' + alldeletefilename + ', 是否继续?', '提示', {
+      this.$confirm('此操作将永久删除：' + alldeletefilename + ', 是否继续?', '提示', {
         confirmButtonText: '确定',
         cancelButtonText: '取消',
         type: 'warning'
       }).then(() => {
         // 调用删除接口
-        console.log('调用删除接口')
-        // 重新获取用户列表
-        console.log('重新获取文件列表')
-        this.$message.success('删除成功')
+        var params = new URLSearchParams()
+        params.append('sourceListId', JSON.stringify(temdata))
+        // 调用删除接口
+        this.$get('/dircetory/deletedirc', params).then((result) => {
+          if (result.code === 200) {
+            this.$message.success(result.message)
+            // 重新获取目录列表
+            console.log('重新获取目录列表')
+            this.getFilesList()
+            this.getAllDirecList()
+            this.getStorageSize()
+          }
+        }).catch((err) => {
+          console.log('操作删除失败', err)
+          this.$message.error('删除失败')
+        })
       }).catch(() => {
         this.$message.info('已取消删除')
       })
@@ -579,23 +877,59 @@ export default {
     },
     // 点击移动到对话框中的确定
     moveFile () {
+      // 判断是否有选择目录
+      if (this.dialogBox.selectedDirecData.length === 0) {
+        this.$message.error('选择的目录不能为空')
+        return
+      }
+      // 获取目标目录
+      var targetId = this.dialogBox.selectedDirecData.id
+      // 获取源目录
+      var sourceListId = []
       // 判断当前确定对话框来自单个文件还是多个文件
       if (this.dialogBox.fromSingleOrMul === 'one') {
-        console.log('当前移动到对话框是点击单个文件打开的')
-        console.log('单个', this.oneShowmore)
-        console.log('单个或多个', this.oneOrMoreShowmore)
+        // console.log('当前移动到对话框是点击单个文件打开的')
+        // console.log('单个', this.oneShowmore)
+        // console.log('单个或多个', this.oneOrMoreShowmore)
+        sourceListId = this.oneShowmore
       } else {
-        console.log('当前移动到对话框是点击单个和多个文件打开的')
-        console.log('单个', this.oneShowmore)
-        console.log('单个或多个', this.oneOrMoreShowmore)
+        // console.log('当前移动到对话框是点击单个和多个文件打开的')
+        // console.log('单个', this.oneShowmore)
+        // console.log('单个或多个', this.oneOrMoreShowmore)
+        sourceListId = this.oneOrMoreShowmore.data
       }
       console.log('选中的目录数据为', this.dialogBox.selectedDirecData)
-      // 隐藏移动到对话框
-      this.dialogBox.moveFileVisible = false
-      // 将选中的目录置空
-      this.dialogBox.selectedDirecData = []
-      // 将对话框来源置空
-      this.dialogBox.fromSingleOrMul = ''
+      console.log(targetId)
+      console.log(sourceListId)
+      for (var item in sourceListId) {
+        if (sourceListId[item].id === targetId) {
+          this.$message.error('当前目录已在' + this.dialogBox.selectedDirecData.name + '下')
+          return
+        }
+      }
+      var params = new URLSearchParams()
+      params.append('sourceListId', JSON.stringify(sourceListId))
+      params.append('targetId', targetId)
+      // 发起请求
+      this.$get('/dircetory/movedirc', params).then((result) => {
+        if (result.code === 200) {
+          this.$message.success(result.message)
+          // 隐藏移动到对话框
+          this.dialogBox.moveFileVisible = false
+          // 将选中的目录置空
+          this.dialogBox.selectedDirecData = []
+          // 将对话框来源置空
+          this.dialogBox.fromSingleOrMul = ''
+
+          // 重新获取目录
+          this.getFilesList()
+          // 重新获取所有目录及子目录
+          this.getAllDirecList()
+        }
+      }).catch((err) => {
+        console.log('请求错误111', err)
+        this.$message.error(err.data.message)
+      })
     },
 
     // 点击复制到显示对话框
@@ -618,25 +952,69 @@ export default {
       console.log('复制到点击了目录数据为', data)
       this.dialogBox.selectedDirecData = data
     },
-    // 点击移动到对话框中的确定
+    // 点击复制到对话框中的确定
     copyFile () {
+      // 判断是否有选择目录
+      if (this.dialogBox.selectedDirecData.length === 0) {
+        this.$message.error('选择的目录不能为空')
+        return
+      }
+      // 获取目标目录
+      var targetId = this.dialogBox.selectedDirecData.id
+      // 获取源目录
+      var sourceListId = []
       // 判断当前确定对话框来自单个文件还是多个文件
       if (this.dialogBox.fromSingleOrMul === 'one') {
-        console.log('当前复制到对话框是点击单个文件打开的')
-        console.log('单个', this.oneShowmore)
-        console.log('单个或多个', this.oneOrMoreShowmore)
+        sourceListId = this.oneShowmore
       } else {
-        console.log('当前复制到对话框是点击单个和多个文件打开的')
-        console.log('单个', this.oneShowmore)
-        console.log('单个或多个', this.oneOrMoreShowmore)
+        sourceListId = this.oneOrMoreShowmore.data
       }
       console.log('选中的目录数据为', this.dialogBox.selectedDirecData)
-      // 隐藏移动到对话框
-      this.dialogBox.copyFileVisible = false
-      // 将选中的目录置空
-      this.dialogBox.selectedDirecData = []
-      // 将对话框来源置空
-      this.dialogBox.fromSingleOrMul = ''
+      console.log(targetId)
+      console.log(sourceListId)
+      for (var item in sourceListId) {
+        if (sourceListId[item].id === targetId) {
+          this.$message.error('当前目录已在' + this.dialogBox.selectedDirecData.name + '下')
+          return
+        }
+      }
+      var params = new URLSearchParams()
+      params.append('sourceListId', JSON.stringify(sourceListId))
+      params.append('targetId', targetId)
+      // 发起请求
+      this.$get('/dircetory/copydirc', params).then((result) => {
+        if (result.code === 200) {
+          this.$message.success(result.message)
+          // 隐藏移动到对话框
+          this.dialogBox.copyFileVisible = false
+          // 将选中的目录置空
+          this.dialogBox.selectedDirecData = []
+          // 将对话框来源置空
+          this.dialogBox.fromSingleOrMul = ''
+
+          // 重新获取目录
+          this.getFilesList()
+          // 重新获取所有目录及子目录
+          this.getAllDirecList()
+          // 重新获取存储信息
+          this.getStorageSize()
+        }
+      }).catch((err) => {
+        console.log('请求错误111', err)
+        this.$message.error(err.data.message)
+      })
+
+      // // 判断当前确定对话框来自单个文件还是多个文件
+      // if (this.dialogBox.fromSingleOrMul === 'one') {
+      //   console.log('当前复制到对话框是点击单个文件打开的')
+      //   console.log('单个', this.oneShowmore)
+      //   console.log('单个或多个', this.oneOrMoreShowmore)
+      // } else {
+      //   console.log('当前复制到对话框是点击单个和多个文件打开的')
+      //   console.log('单个', this.oneShowmore)
+      //   console.log('单个或多个', this.oneOrMoreShowmore)
+      // }
+      // console.log('选中的目录数据为', this.dialogBox.selectedDirecData)
     }
   }
 }
