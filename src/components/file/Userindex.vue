@@ -196,7 +196,7 @@
 import globaluploader from './component/GlobalUploader'
 import qs from 'qs'
 import Bus from '../../js/bus'
-import { type } from 'os';
+import { type } from 'os'
 export default {
   data () {
     return {
@@ -873,8 +873,13 @@ export default {
         const link = document.createElement('a')
         link.style.display = 'none'
         link.href = url
-        link.setAttribute('download', this.oneOrMoreShowmore.data[0].name + '等' +
-                        this.oneOrMoreShowmore.data.length + '文件' + '.zip')
+        if (this.oneOrMoreShowmore.data.length === 1 && this.oneOrMoreShowmore.data[0].type !== 'dir') {
+          link.setAttribute('download', this.oneOrMoreShowmore.data[0].name + '.' +
+                      this.oneOrMoreShowmore.data[0].type)
+        } else {
+          link.setAttribute('download', this.oneOrMoreShowmore.data[0].name + '等' +
+                          this.oneOrMoreShowmore.data.length + '文件' + '.zip')
+        }
 
         document.body.appendChild(link)
         link.click()
