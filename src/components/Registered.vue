@@ -72,7 +72,8 @@ export default {
         // const { data: result } = await this.$http.post('/login', this.loginFrom)
         var username = this.registeredFrom.account
         var password = this.registeredFrom.password
-        this.$post('/user/register', {username: username, password: password }).then((result) => {
+        this.$post('/user/register', { username: username, password: password }).then((result) => {
+          console.log(result)
           if (result.code === 200) {
             this.$message.success('注册成功')
             // 跳转界面

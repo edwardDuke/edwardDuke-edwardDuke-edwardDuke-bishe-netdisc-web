@@ -12,16 +12,22 @@ import './assets/style/iconfont/iconfont.css'
 import './plugins/particles.js'
 // 导入自定义的axios
 import { get, post } from './request/http.js'
-// import http from './request/http.js'
+import http from 'axios'
 import qs from 'qs'
 // 导入iview
 import './plugins/iview.js'
-
-// Vue.prototype.$http = http
+// 导入第三方上传组件
+import './plugins/vue-simple-upload.js'
+// 导入hash
+import uploadFile from './request/uploadFile.js'
+Vue.prototype.uploadFile = uploadFile
+Vue.prototype.$http = http
 // Vue.prototype.$qs = qs
 // 将自定义的axios设置为全局使用
 Vue.prototype.$post = post
 Vue.prototype.$get = get
+// 注册一个全局事件发送
+Vue.prototype.$BUS = new Vue()
 
 Vue.config.productionTip = false
 

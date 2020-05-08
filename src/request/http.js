@@ -4,8 +4,8 @@ import route from '../router/index'
 import qs from 'qs'
 
 // axios 配置
-// 响应时间
-axios.defaults.timeout = 8000
+// 响应时间5分钟
+axios.defaults.timeout = 5 * 60 * 1000
 // 接口地址
 axios.defaults.baseURL = 'http://localhost:8088'
 // 配置请求头
@@ -40,8 +40,8 @@ axios.interceptors.response.use(
     console.log('-----------------------------')
     console.log(error.response)
     console.log('=============================')
-    route.push('/login')
     if (error.response.data.code === 201) {
+      route.push('/login')
       return Promise.reject(error.response.data)
     } else {
       return Promise.reject(error.response)

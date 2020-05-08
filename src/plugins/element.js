@@ -5,8 +5,9 @@ import {
   Breadcrumb, BreadcrumbItem, Card, Row, Col, Table, TableColumn,
   Switch, Tooltip, Pagination, Dialog, MessageBox, Select, Option,
   Link, Avatar, Dropdown, DropdownMenu, DropdownItem, Progress, Image,
-  Upload, Tree
+  Upload, Tree, Scrollbar, Drawer, Notification
 } from 'element-ui'
+// import VueParticles from 'vue-particles'
 
 Vue.use(Button)
 Vue.use(ButtonGroup)
@@ -43,5 +44,8 @@ Vue.use(Progress)
 Vue.use(Image)
 Vue.use(Upload)
 Vue.use(Tree)
+Vue.use(Scrollbar)
+Vue.use(Drawer)
 Vue.prototype.$message = Message
+Vue.prototype.$notify = Notification
 Vue.prototype.$confirm = MessageBox.confirm

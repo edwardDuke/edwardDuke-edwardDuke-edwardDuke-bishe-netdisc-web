@@ -101,6 +101,7 @@ export default {
   methods: {
     // 退出
     logout () {
+      this.$message.success('退出成功')
       window.sessionStorage.clear()
       window.localStorage.clear()
       this.$store.commit('saveToken', '')

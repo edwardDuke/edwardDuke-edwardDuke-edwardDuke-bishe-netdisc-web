@@ -98,6 +98,8 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
   // to将要访问的路径，from代表从哪个路径跳转而来，next是一个函数，表示放行
   // if (to.path === '/index') return next()
+  if (to.path === '/usertest') return next()
+  if (to.path === '/usershare') return next()
   // // 如果直接访问login，通过
   if (to.path === '/login') return next()
   // 如果直接访问注册，通过

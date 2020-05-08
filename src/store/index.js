@@ -13,7 +13,9 @@ export default new Vuex.Store({
     username: '',
     userId: 0,
     userInfoObj: {},
-    token: ''
+    token: '',
+    // 存放全局上传数据
+    uploadInfo: {}
   },
   mutations: {
     changeLogin (state, data) {
@@ -30,6 +32,10 @@ export default new Vuex.Store({
       }
       state.userId = data.id
       state.userInfoObj = data
+    },
+    // 存储全局上传数据
+    saveUploadInfo (state, data) {
+      state.uploadInfo = data
     }
   },
   getters: {

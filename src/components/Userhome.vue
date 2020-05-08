@@ -39,11 +39,39 @@
         </el-header>
         <el-main>
             <router-view></router-view>
+            <!-- <globaluploader></globaluploader> -->
         </el-main>
+
+        <!-- 修改用户对话框 -->
+        <el-dialog
+          title="修改用户"
+          :visible.sync="editUserVisible"
+          :close-on-click-modal="false"
+          width="40%" @close="editUserClose">
+          <el-form :model="editUserInfo" :rules="editUserFromRules" ref="editUserFromRef" label-width="100px" size="mini">
+            <el-form-item label="用户账号" prop="account">
+              <el-input v-model="editUserInfo.account" disabled></el-input>
+            </el-form-item>
+            <el-form-item label="姓名" prop="name">
+              <el-input v-model="editUserInfo.name"></el-input>
+            </el-form-item>
+            <el-form-item label="性别" prop="sex">
+              <el-select v-model="editUserInfo.sex" placeholder="请选择性别">
+                <el-option label="男" value="男"></el-option>
+                <el-option label="女" value="女"></el-option>
+              </el-select>
+            </el-form-item>
+          </el-form>
+          <span slot="footer" class="dialog-footer">
+            <el-button @click="editUserVisible = false">取 消</el-button>
+            <el-button type="primary" @click="editUser">确 定</el-button>
+          </span>
+        </el-dialog>
     </el-container>
 </template>
 
 <script>
+// import globaluploader from './file/component/GlobalUploader'
 export default {
   data () {
     return {
@@ -53,9 +81,30 @@ export default {
       userinfo: {
         username: this.$store.state.username,
         userImg: '../assets/images/user.png'
+      },
+
+      // 编辑用户对话框显示
+      editUserVisible: false,
+      // 获取用户编辑的信息
+      editUserInfo: {
+        account: '15766936118',
+        name: '王小虎',
+        sex: 'n男'
+      },
+      // 编辑用户表单的验证规则
+      editUserFromRules: {
+        name: [
+          { required: true, message: '请输入姓名', trigger: 'blur' }
+        ],
+        sex: [
+          { required: true, message: '请选择性别', trigger: 'blur' }
+        ]
       }
     }
   },
+  // components: {
+  //   globaluploader: globaluploader
+  // },
   // 向子组件提供当前页访问的方法
   provide () {
     return {
@@ -80,16 +129,52 @@ export default {
         this.logout()
       }
     },
-    changeUserinfo () {
-      this.$message.info('点击修改用户信息')
-    },
+    // changeUserinfo () {
+    //   this.$message.info('点击修改用户信息')
+    // },
     // 退出
     logout () {
+      this.$message.success('退出成功')
       window.sessionStorage.clear()
       window.localStorage.clear()
       this.$store.commit('saveToken', '')
       this.$store.commit('changeLogin', false)
       this.$router.push('/login')
+    },
+    // 展示用戶编辑对话框
+    changeUserinfo () {
+      this.editUserInfo = this.$store.state.userInfoObj
+      console.log('ccccc', this.editUserInfo)
+      this.editUserVisible = true
+    },
+    // 监听编辑用户关闭，并重置当前表单
+    editUserClose () {
+      this.$refs.editUserFromRef.resetFields()
+      this.editUserInfo = {}
+    },
+    // 修改用户信息提交
+    editUser () {
+      this.$refs.editUserFromRef.validate(async valid => {
+        console.log(valid)
+        if (!valid) return
+        // 调用修改接口
+        console.log('调用修改用户接口', this.editUserInfo)
+        this.$post('/user/edit', this.editUserInfo).then((result) => {
+          if (result.code === 200) {
+            // 隐藏对话框
+            this.editUserVisible = false
+            // 重新刷新用户信息
+            console.log('重新刷新用户信息')
+            this.$store.commit('saveUserInfo', result.data)
+            this.userinfo.username = result.data.name
+            // 弹窗修改成功
+            this.$message.success('修改信息成功')
+          }
+        }).catch((err) => {
+          console.log('请求失败', err)
+          this.$message.error(err.message)
+        })
+      })
     }
   }
 }

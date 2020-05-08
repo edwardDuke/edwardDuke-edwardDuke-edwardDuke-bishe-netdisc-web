@@ -20,7 +20,6 @@
       <div>
         <div class="schedule">
           <el-progress :percentage="storage.proportion" color="#6f7ad3" :show-text="false"></el-progress>
-          <!-- <el-progress type="dashboard" percentage="10" width="100" :show-text="false" color="#6f7ad3"></el-progress> -->
           <span>容量：{{storage.useStorage}}/{{storage.allStorage}}</span>
         </div>
       </div>
@@ -32,16 +31,8 @@
         <!-- 上传-创建文件夹 -->
         <el-col :span="6">
           <!-- 上传 -->
-          <el-upload
-            class="upload-demo"
-            action="https://jsonplaceholder.typicode.com/posts/"
-            :data="uploadFileinfo"
-            :show-file-list="false"
-            multiple
-            :before-upload="beforeUploadFile"
-            >
-            <el-button type="primary" size="medium"><i class="el-icon-upload2 el-icon--left"></i>上传</el-button>
-          </el-upload>
+          <el-button type="primary" size="medium" @click="uploadFile"><i class="el-icon-upload2 el-icon--left"></i>上传</el-button>
+
           <!-- 新建文件夹 -->
           <el-button plain size="medium" @click="showNewFolder"><i class="el-icon-folder-add el-icon--left"></i>新建文件夹</el-button>
         </el-col>
@@ -197,16 +188,31 @@
             <el-button type="primary" @click="copyFile">确 定</el-button>
         </span>
     </el-dialog>
+    <globaluploader></globaluploader>
   </el-container>
 </template>
 
 <script>
+import globaluploader from './component/GlobalUploader'
+import qs from 'qs'
+import Bus from '../../js/bus'
+import { type } from 'os';
 export default {
   data () {
     return {
+      // 上传请求数据
+      uploadRequest: {
+        path: 'http://localhost:8088/file/test11',
+        headers: { Authorization: this.$store.state.token }
+      },
       // 上传文件携带的参数
       uploadFileinfo: {
         id: '111'
+      },
+      // 上传进度显示数据
+      uploadFileing: {
+        drawer: false,
+        fileArr: []
       },
       // 对话框数据
       dialogBox: {
@@ -303,6 +309,16 @@ export default {
       getAllDircList: [],
       // 文件导航面包屑
       navigationBar: []
+    }
+  },
+  components: {
+    globaluploader: globaluploader
+  },
+  // 向子组件提供当前页访问的方法
+  provide () {
+    return {
+      getFilesList: this.getFilesList,
+      getStorageSize: this.getStorageSize
     }
   },
   // 注册可以访问父类的方法
@@ -419,17 +435,27 @@ export default {
       // 获取储存空间大小
       this.$get('/user/getstorage').then((result) => {
         if (result.code === 200) {
-          this.storage.proportion = (result.data.useStorage / result.data.allStorage) * 100
+          // 显示进度条
+          if ((result.data.useStorage / result.data.allStorage) >= 1) {
+            this.storage.proportion = 100
+          } else {
+            this.storage.proportion = (result.data.useStorage / result.data.allStorage) * 100
+          }
+          // 已用存储
           if (result.data.useStorage / 1024 < 1) {
-            this.storage.useStorage = (result.data.useStorage / 1024).toFixed(2) + 'K'
+            this.storage.useStorage = result.data.useStorage + 'Bytes'
           }
           if (result.data.useStorage / 1024 >= 1 && result.data.useStorage / 1024 < 1024) {
-            this.storage.useStorage = (result.data.useStorage / 1024).toFixed(2) + 'M'
+            this.storage.useStorage = (result.data.useStorage / 1024).toFixed(2) + 'KB'
           }
-          if (result.data.useStorage / 1024 >= 1024) {
-            this.storage.useStorage = (result.data.useStorage / (1024 * 1024)).toFixed(2) + 'G'
+          if (result.data.useStorage / (1024 * 1024) >= 1 && result.data.useStorage / (1024 * 1024) < 1024) {
+            this.storage.useStorage = (result.data.useStorage / (1024 * 1024)).toFixed(2) + 'MB'
           }
-          this.storage.allStorage = result.data.allStorage / (1024 * 1024) + 'G'
+          if (result.data.useStorage / (1024 * 1024) >= 1024) {
+            this.storage.useStorage = (result.data.useStorage / (1024 * 1024 * 1024)).toFixed(2) + 'GB'
+          }
+          // 全部存储
+          this.storage.allStorage = result.data.allStorage / (1024 * 1024 * 1024) + 'GB'
         }
       }).catch((err) => {
         console.log(err)
@@ -481,11 +507,21 @@ export default {
           var type = fileProcess[num].type
           // 判断类型，查找不出来暂用目录代替
           if (type) {
-            fileImgpath = this.getFileImagePath(type)
+            if (fileProcess[num].typename === 'picture') {
+              fileImgpath = this.getFileImagePath('jpg')
+            } else if (fileProcess[num].typename === 'document') {
+              fileImgpath = this.getFileImagePath('document')
+            } else if (fileProcess[num].typename === 'video') {
+              fileImgpath = this.getFileImagePath('video')
+            } else if (fileProcess[num].typename === 'music') {
+              fileImgpath = this.getFileImagePath('music')
+            } else {
+              fileImgpath = this.getFileImagePath('unknown')
+            }
             //   重置是文件的名字
             fileProcess[num].name = fileProcess[num].name + '.' + type
           } else {
-            fileImgpath = this.getFileImagePath('dir')
+            fileImgpath = this.getFileImagePath('unknown')
           }
           // 添加显示图片路径
           this.$set(fileProcess[num], 'imgpath', fileImgpath)
@@ -495,13 +531,16 @@ export default {
 
           // 处理文件大小
           if (fileProcess[num].size / 1024 < 1) {
-            fileProcess[num].size = (fileProcess[num].size / 1024).toFixed(2) + 'K'
+            fileProcess[num].size = fileProcess[num].size + 'Byte'
           }
           if (fileProcess[num].size / 1024 >= 1 && fileProcess[num].size / 1024 < 1024) {
-            fileProcess[num].size = (fileProcess[num].size / 1024).toFixed(2) + 'M'
+            fileProcess[num].size = (fileProcess[num].size / 1024).toFixed(2) + 'KB'
           }
-          if (fileProcess[num].size / 1024 >= 1024) {
-            fileProcess[num].size = (fileProcess[num].size / (1024 * 1024)).toFixed(2) + 'G'
+          if (fileProcess[num].size / (1024 * 1024) >= 1 && fileProcess[num].size / (1024 * 1024) < 1024) {
+            fileProcess[num].size = (fileProcess[num].size / (1024 * 1024)).toFixed(2) + 'MB'
+          }
+          if (fileProcess[num].size / (1024 * 1024) >= 1024) {
+            fileProcess[num].size = (fileProcess[num].size / (1024 * 1024 * 1024)).toFixed(2) + 'GB'
           }
           // 添加到显示板上
           this.tableData.push(fileProcess[num])
@@ -510,6 +549,15 @@ export default {
     },
     // 处理文件列表图片显示问题
     getFileImagePath (type) {
+      const url = ''
+      require(['@/assets/images/file/file_' + type + '.png'], function (result) {
+        if (result === '') {
+          console.log('aaa')
+        } else {
+          console.log('bbb', result)
+        }
+      })
+      console.log('****************', url)
       return require('@/assets/images/file/file_' + type + '.png')
     },
     // 左边菜单栏按类型搜索文件
@@ -519,11 +567,11 @@ export default {
       this.tableData = []
       // 清除pid
       this.directory.pid = ''
-      // this.$message.info(index)
+      this.$message.info(index)
       if (index === '1') {
         this.getFilesList()
       } else {
-        this.$get('file/type', { type: index }).then((result) => {
+        this.$get('/file/type', { type: index }).then((result) => {
           console.log('左边菜单栏按类型搜索文件')
           if (result.code === 200) {
             console.log('请求成功,返回数据', result.data)
@@ -641,11 +689,6 @@ export default {
         this.deleteOneFile()
       }
       console.log(select)
-    },
-    // 上传文件之前先给文件进行hash判断
-    beforeUploadFile (file) {
-      console.log(file)
-      return false
     },
     // 点击新建文件夹
     showNewFolder () {
@@ -777,13 +820,67 @@ export default {
       // this.showmore.data.forEach(element => {
       //   console.log(3, element)
       // })
+      this.$http({
+        method: 'post',
+        url: '/download/morefile',
+        data: qs.stringify({
+          id: this.oneShowmore.id,
+          type: this.oneShowmore.type
+        }),
+        responseType: 'blob'
+      }).then((result) => {
+        const url = window.URL.createObjectURL(new Blob([result]))
+        const link = document.createElement('a')
+        link.style.display = 'none'
+        link.href = url
+        if (this.oneShowmore.type === 'dir') {
+          link.setAttribute('download', this.oneShowmore.name + '.' + 'zip')
+        } else {
+          link.setAttribute('download', this.oneShowmore.name)
+        }
+
+        document.body.appendChild(link)
+        link.click()
+      }).catch((err) => {
+        console.log(err)
+      })
     },
     // 点击单个或者多个文件下载
     downloadOneOrMoreFile () {
       this.oneOrMoreShowmore.data.forEach(element => {
         console.log(3, element)
       })
+      const selectIdlist = []
+      const selectTypeList = []
+      this.oneOrMoreShowmore.data.forEach(data => {
+        selectIdlist.push(data.id)
+        selectTypeList.push(data.type)
+        console.log(data)
+      })
+      console.log(selectIdlist)
+      console.log(selectIdlist.join(','))
       console.log('点击单个或者多个文件下载', this.oneOrMoreShowmore.data)
+      this.$http({
+        method: 'post',
+        url: '/download/morefile',
+        data: qs.stringify({
+          id: selectIdlist.join(','),
+          type: selectTypeList.join(',')
+        }),
+        responseType: 'blob'
+      }).then((result) => {
+        const url = window.URL.createObjectURL(new Blob([result]))
+        const link = document.createElement('a')
+        link.style.display = 'none'
+        link.href = url
+        link.setAttribute('download', this.oneOrMoreShowmore.data[0].name + '等' +
+                        this.oneOrMoreShowmore.data.length + '文件' + '.zip')
+
+        document.body.appendChild(link)
+        link.click()
+      }).catch((err) => {
+        console.log(err)
+      })
     },
     // 点击单个文件删除
     deleteOneFile () {
@@ -1015,6 +1112,16 @@ export default {
       //   console.log('单个或多个', this.oneOrMoreShowmore)
       // }
       // console.log('选中的目录数据为', this.dialogBox.selectedDirecData)
+    },
+
+    // 文件上传部分
+    uploadFile () {
+      console.log(this.$BUS)
+      Bus.$emit('openUploader', {
+        // superiorID: 'this.superiorID',
+        // abc: 'abc',
+        dirId: this.getdirc.id
+      })
     }
   }
 }
@@ -1076,5 +1183,31 @@ export default {
       margin-left: 10px;
     }
 }
+
+ .show-upload-file {
+    display: flex;
+    flex-flow: column;
+
+  }
+  .bg {
+    width: 80%;
+    display:inline-block;
+    overflow: hidden;
+    text-overflow:ellipsis;
+    white-space: nowrap;
+    i {
+      margin: 0 5px;
+    }
+  }
+  .bgg {
+    position: absolute;
+    right: 0;
+    margin: 0 10px;
+  }
+
+// 去除drawer标题出现蓝色框
+  /deep/ :focus{
+    outline:0;
+  }
 
 </style>
