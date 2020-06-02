@@ -1,4 +1,5 @@
 <template>
+<div class="allconter">
   <el-container class="home-container">
     <!-- 侧边栏部分 -->
     <el-aside width="185px">
@@ -39,7 +40,7 @@
         <!-- 更多操作-下载-删除-重命名-移动到-复制到 -->
         <el-col :span="12" >
           <el-button-group v-if="oneOrMoreShowmore.isshow">
-            <el-button size="medium" icon="el-icon-share" @click="shareOneOrMoreFile">分享</el-button>
+            <!-- <el-button size="medium" icon="el-icon-share" @click="shareOneOrMoreFile">分享</el-button> -->
             <el-button size="medium" icon="el-icon-edit" @click="downloadOneOrMoreFile">下载</el-button>
             <el-button size="medium" icon="el-icon-delete" @click="deleteOneOrMoreFile('more')">删除</el-button>
             <el-button size="medium" :disabled="!oneOrMoreShowmore.isOneFile" @click="showRenameFolder">重命名</el-button>
@@ -68,9 +69,6 @@
             <a v-else >{{site.name}}</a>
             </el-breadcrumb-item>
         </template>
-        <!-- <el-breadcrumb-item ><a href="/aa">全部文件</a></el-breadcrumb-item>
-        <el-breadcrumb-item><a href="/">目录1</a></el-breadcrumb-item>
-        <el-breadcrumb-item><a href="/">目录2</a></el-breadcrumb-item> -->
       </el-breadcrumb>
       <!-- 文件列表显示 -->
       <el-table
@@ -83,7 +81,7 @@
         <!-- 多选框 -->
         <el-table-column type="selection" width="35"></el-table-column>
         <!-- 文件名 -->
-        <el-table-column  prop="name" label="文件名" width="600">
+        <el-table-column  prop="name" label="文件名" min-width="400">
           <template slot-scope="scope">
             <el-link :underline="false" v-if="scope.row.type == 'dir'" @click="getFilesListById(scope.row)">
               <div class="file-name">
@@ -105,7 +103,7 @@
           <template slot-scope="scope" v-if="scope.row.isshow && oneOrMoreShowmore.isOneFile">
             <!-- 分享图标 -->
             <el-tooltip content="分享" :enterable="false" effect="light">
-              <el-link class="file-operating" :underline="false" @click="shareOneFile(scope.row)"><i class="el-icon-share"></i></el-link>
+              <!-- <el-link class="file-operating" :underline="false" @click="shareOneFile(scope.row)"><i class="el-icon-share"></i></el-link> -->
             </el-tooltip>
             <!--下载图标  -->
             <el-tooltip content="下载" :enterable="false" effect="light">
@@ -124,7 +122,7 @@
           </template>
         </el-table-column>
         <el-table-column prop="size" label="大小" ></el-table-column>
-        <el-table-column prop="lastmodifytime" label="修改日期" width="200"></el-table-column>
+        <el-table-column prop="lastmodifytime" label="修改日期" min-width="160"></el-table-column>
         <!-- <el-table-column prop="test" label="修改日期" width="200"></el-table-column> -->
       </el-table>
     </el-main>
@@ -190,6 +188,7 @@
     </el-dialog>
     <globaluploader></globaluploader>
   </el-container>
+</div>
 </template>
 
 <script>
@@ -567,7 +566,7 @@ export default {
       this.tableData = []
       // 清除pid
       this.directory.pid = ''
-      this.$message.info(index)
+      // this.$message.info(index)
       if (index === '1') {
         this.getFilesList()
       } else {
@@ -820,9 +819,15 @@ export default {
       // this.showmore.data.forEach(element => {
       //   console.log(3, element)
       // })
+      var downurl = ''
+      if (this.oneShowmore.type === 'dir') {
+        downurl = '/download/morefile'
+      } else {
+        downurl = '/download/onefile'
+      }
       this.$http({
         method: 'post',
-        url: '/download/morefile',
+        url: downurl,
         data: qs.stringify({
           id: this.oneShowmore.id,
           type: this.oneShowmore.type
@@ -843,6 +848,7 @@ export default {
         link.click()
       }).catch((err) => {
         console.log(err)
+        this.$message.error('下载失败')
       })
     },
     // 点击单个或者多个文件下载
@@ -859,23 +865,33 @@ export default {
       })
       console.log(selectIdlist)
       console.log(selectIdlist.join(','))
+      var downurll = ''
       console.log('点击单个或者多个文件下载', this.oneOrMoreShowmore.data)
+      if (this.oneOrMoreShowmore.data.length === 1) {
+        if (this.oneOrMoreShowmore.data[0].type !== 'dir') {
+          downurll = '/download/onefile'
+        } else {
+          downurll = '/download/morefile'
+        }
+      } else {
+        downurll = '/download/morefile'
+      }
       this.$http({
         method: 'post',
-        url: '/download/morefile',
+        url: downurll,
         data: qs.stringify({
           id: selectIdlist.join(','),
           type: selectTypeList.join(',')
         }),
         responseType: 'blob'
       }).then((result) => {
+        console.log(result)
         const url = window.URL.createObjectURL(new Blob([result]))
         const link = document.createElement('a')
         link.style.display = 'none'
         link.href = url
         if (this.oneOrMoreShowmore.data.length === 1 && this.oneOrMoreShowmore.data[0].type !== 'dir') {
-          link.setAttribute('download', this.oneOrMoreShowmore.data[0].name + '.' +
-                      this.oneOrMoreShowmore.data[0].type)
+          link.setAttribute('download', this.oneOrMoreShowmore.data[0].name)
         } else {
           link.setAttribute('download', this.oneOrMoreShowmore.data[0].name + '等' +
                           this.oneOrMoreShowmore.data.length + '文件' + '.zip')
@@ -883,10 +899,16 @@ export default {
 
         document.body.appendChild(link)
         link.click()
+        // 下载完成移除元素
+        document.body.removeChild(link)
+        // 释放掉blob对象
+        window.URL.revokeObjectURL(url)
       }).catch((err) => {
         console.log(err)
+        this.$message.error('下载失败')
       })
     },
+
     // 点击单个文件删除
     deleteOneFile () {
       // 拿取当前要删除的数据
@@ -1133,10 +1155,15 @@ export default {
 </script>
 
 <style lang="less" scoped>
+.allconter{
+  min-width: 1200px;
+}
+
 .home-container{
     height: 100%;
 }
 .el-aside{
+    // height: 100%;
     background-color: #f7f7f7;
     .el-menu{
         border-right: none;

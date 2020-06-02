@@ -1,4 +1,5 @@
 <template>
+<div class="allconter">
     <el-container class="home-container">
         <!-- 头部 -->
         <el-header>
@@ -30,6 +31,7 @@
             <router-view></router-view>
         </el-main>
     </el-container>
+</div>
 </template>
 
 <script>
@@ -62,6 +64,11 @@ export default {
 </script>
 
 <style lang="less" scoped>
+.allconter{
+  min-width: 600px;
+  height: 100%;
+}
+
 .el-header{
     background-color: #ffffff;
     display: flex;

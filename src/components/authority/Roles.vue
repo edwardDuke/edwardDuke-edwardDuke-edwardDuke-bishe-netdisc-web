@@ -139,7 +139,6 @@
                         <el-option label="GB" value="1048576"></el-option>
                       </el-select>
                     </el-input>
-                    </el-input>
                 </el-form-item>
             </el-form>
             <span slot="footer" class="dialog-footer">
@@ -153,11 +152,21 @@
             title="权限分配"
             :close-on-click-modal="false"
             :visible.sync="showSetRightDialogVisible"
-            width="50%">
+            width="50%" @close="permissionClose">
             <span>这是权限分配对话框</span>
+            <el-tree
+              ref="tree"
+              :data="permission"
+              :props="permissionProps"
+              node-key="id"
+              show-checkbox
+              :default-expanded-keys="hasPermission"
+              default-expand-all
+            >
+              </el-tree>
             <span slot="footer" class="dialog-footer">
                 <el-button @click="showSetRightDialogVisible = false">取 消</el-button>
-                <el-button type="primary" @click="showSetRightDialogVisible = false">确 定</el-button>
+                <el-button type="primary" @click="allPermission">确 定</el-button>
             </span>
         </el-dialog>
     </div>
@@ -228,7 +237,14 @@ export default {
         name: [{ required: true, message: '请输入角色名称', trigger: 'blur' }]
       },
       //   控制展示分配权限对话框
-      showSetRightDialogVisible: false
+      showSetRightDialogVisible: false,
+      permission: [],
+      hasPermission: [],
+      permissionProps: {
+        children: 'children',
+        label: 'name'
+      },
+      roleId: ''
     }
   },
   inject: ['saveMenuItem'],
@@ -238,6 +254,7 @@ export default {
     this.getRolesInfo()
 
     this.getRole()
+    this.getPermission()
   },
   methods: {
     // 获取角色列表
@@ -428,9 +445,55 @@ export default {
         this.$message.info('已取消删除')
       })
     },
+    getPermission () {
+      // 获取权限列表
+      this.$get('/role/getpermission').then((result) => {
+        if (result.code === 200) {
+          // 获取用户列表
+          console.log('获取权限列表')
+          this.permission = result.data
+        }
+      }).catch((err) => {
+        this.$message.error(err.message)
+      })
+    },
     //   展示分配权限的对话框
     showSetRightDialog (id) {
+      // 获取权限列表
+      this.roleId = id
       this.showSetRightDialogVisible = true
+      this.$get('/role/hasper/' + id).then((result) => {
+        if (result.code === 200) {
+          // 获取用户列表
+          console.log('已有')
+          this.hasPermission = result.data
+          this.$refs.tree.setCheckedKeys(this.hasPermission)
+        }
+      }).catch((err) => {
+        this.$message.error(err.message)
+      })
+    },
+    permissionClose () {
+      this.hasPermission = []
+    },
+    allPermission () {
+      const keys = [
+        ...this.$refs.tree.getCheckedKeys(),
+        ...this.$refs.tree.getHalfCheckedKeys()
+      ]
+      console.log(keys)
+      const idStr = keys.join(',')
+      const data = {}
+      data.roleid = this.roleId
+      data.idStr = idStr
+      this.$post('/role/changePer', data).then((result) => {
+        if (result.code === 200) {
+          this.$message.success('修改成功')
+          this.showSetRightDialogVisible = false
+        }
+      }).catch((err) => {
+        this.$message.error(err.message)
+      })
     }
   }
 

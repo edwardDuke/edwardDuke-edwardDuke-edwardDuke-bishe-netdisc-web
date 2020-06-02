@@ -14,6 +14,8 @@ import './plugins/particles.js'
 import { get, post } from './request/http.js'
 import http from 'axios'
 import qs from 'qs'
+import './plugins/vant.js'
+import 'vant/lib/index.css'
 // 导入iview
 import './plugins/iview.js'
 // 导入第三方上传组件

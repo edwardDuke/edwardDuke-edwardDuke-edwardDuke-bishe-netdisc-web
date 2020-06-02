@@ -1,4 +1,5 @@
 <template>
+<div class="allconter">
     <el-container class="home-container">
         <el-header>
             <el-row :gutter="10" class="headerSeconde">
@@ -20,7 +21,7 @@
                             :router="true"
                             >
                             <el-menu-item index="/userindex">首页</el-menu-item>
-                            <el-menu-item index="/usershare">分享</el-menu-item>
+                            <!-- <el-menu-item index="/usershare">分享</el-menu-item> -->
                         </el-menu>
                         <el-dropdown @command="handleCommand">
                             <div class="userinfo">
@@ -68,6 +69,7 @@
           </span>
         </el-dialog>
     </el-container>
+</div>
 </template>
 
 <script>
@@ -181,6 +183,10 @@ export default {
 </script>
 
 <style lang="less" scoped>
+.allconter{
+  min-width: 1300px;
+}
+
 .home-container{
     height: 100%;
     z-index: 999;

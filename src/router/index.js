@@ -12,12 +12,16 @@ import store from '../store/index'
 import Userhome from '../components/Userhome.vue'
 import Userindex from '../components/file/Userindex.vue'
 import Usershare from '../components/share/Usershare.vue'
+// 移动端界面
+import MobileLogin from '../view/android/login.vue'
+import MobileRegister from '../view/android/register.vue'
+import MobileHome from '../view/android/home.vue'
 
 Vue.use(VueRouter)
 
 const routes = [
   // 重定向
-  { path: '/', redirect: '/index' },
+  { path: '/', redirect: '/userhome' },
   {
     path: '/index',
     component: Index,
@@ -86,6 +90,34 @@ const routes = [
         meta: { title: '分享' }
       }
     ]
+  },
+  // 移动端部分界面
+  {
+    path: '/mobile/login',
+    component: MobileLogin,
+    meta: { title: '登录' }
+    // children: [
+    //   { path: '/mobile/login', component: MobileLogin, meta: { title: '登录' } },
+    //   { path: '/mobile/registered', component: Registered, meta: { title: '登录' } }
+    // ]
+  },
+  {
+    path: '/mobile/registered',
+    component: MobileRegister,
+    meta: { title: '注册' }
+    // children: [
+    //   { path: '/mobile/login', component: MobileLogin, meta: { title: '登录' } },
+    //   { path: '/mobile/registered', component: Registered, meta: { title: '登录' } }
+    // ]
+  },
+  {
+    path: '/mobile/index',
+    component: MobileHome,
+    meta: { requireAuth: true, title: '首页' }
+    // children: [
+    //   { path: '/mobile/login', component: MobileLogin, meta: { title: '登录' } },
+    //   { path: '/mobile/registered', component: Registered, meta: { title: '登录' } }
+    // ]
   }
 ]
 
@@ -98,14 +130,25 @@ const router = new VueRouter({
 router.beforeEach((to, from, next) => {
   // to将要访问的路径，from代表从哪个路径跳转而来，next是一个函数，表示放行
   // if (to.path === '/index') return next()
-  if (to.path === '/usertest') return next()
-  if (to.path === '/usershare') return next()
+  if (to.path === '/mobile/login') return next()
+  if (to.path === '/mobile/registered') return next()
   // // 如果直接访问login，通过
   if (to.path === '/login') return next()
   // 如果直接访问注册，通过
   if (to.path === '/registered') return next()
   // 其他则需要先判断，先获取token
-
+  if (to.path === '/userindex') {
+    if ((document.body.clientWidth || document.documentElement.clientWidth) <= 600) {
+      console.log('哈哈哈')
+      next({
+        path: '/mobile/index',
+        query: { redirect: to.fullPath }
+      }) // 将to参数中的url传递给login页面进行操作
+    } else {
+      console.log('呵呵呵')
+      next()
+    }
+  }
   // const tokenStr = window.sessionStorage.getItem('token')
   // if (!tokenStr) return next('/login')
   // next()
@@ -117,6 +160,8 @@ router.beforeEach((to, from, next) => {
     const userInfo = JSON.parse(window.localStorage.getItem('userInfo'))
     store.commit('saveUserInfo', userInfo)
   }
+  const winWidth = document.body.clientWidth || document.documentElement.clientWidth
+
   console.log('当前登录状态', store.state.isLogin)
   store.dispatch('getUserInfo').then(() => {
     console.log('检查登录状态成功后')
@@ -124,10 +169,17 @@ router.beforeEach((to, from, next) => {
       console.log('获取登录状态', store.state.isLogin)
       if (!store.state.isLogin) { // 没有登录
         console.log('没有登录')
-        next({
-          path: '/login',
-          query: { redirect: to.fullPath }
-        }) // 将to参数中的url传递给login页面进行操作
+        if (winWidth >= 600) {
+          next({
+            path: '/login',
+            query: { redirect: to.fullPath }
+          }) // 将to参数中的url传递给login页面进行操作
+        } else {
+          next({
+            path: '/mobile/login',
+            query: { redirect: to.fullPath }
+          }) // 将to参数中的url传递给login页面进行操作
+        }
       } else {
         next()
       }

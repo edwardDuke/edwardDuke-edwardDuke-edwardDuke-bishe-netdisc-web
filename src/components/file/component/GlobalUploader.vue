@@ -305,7 +305,7 @@ export default {
         bottom: 15px;
 
         .uploader-app {
-            width: 520px;
+            width: 540px;
         }
         .file-panel {
             background-color: #fff;
