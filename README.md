@@ -1,24 +1,17 @@
-# bishe-netdisc-web
+# 毕业设计基于HDFS的网盘系统设计与实现前端部分bishe-netdisc-web
 
-## Project setup
+## 项目下载依赖
 ```
 npm install
 ```
 
-### Compiles and hot-reloads for development
+### 程序运行
 ```
 npm run serve
 ```
 
-### Compiles and minifies for production
+### 后端部分模块
 ```
-npm run build
-```
-
-### Lints and fixes files
-```
-npm run lint
+https://gitee.com/third_e/bishe-netdisc
 ```
 
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
