@@ -16,4 +16,5 @@ npm run serve
 
 [后端代码](http://gitee.com/third_e/bishe-netdisc?_from=gitee_search)
 
-
+ **项目运行截图** 
+![输入图片说明](https://images.gitee.com/uploads/images/2020/0609/185604_1ec0bc85_5483517.png "屏幕截图.png")
